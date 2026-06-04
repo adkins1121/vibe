@@ -19,13 +19,15 @@ Both secrets are server-side — never shipped to the browser.
 1. Slack → **Apps** → create (or reuse) an app for your workspace
    (<https://api.slack.com/apps> → *Create New App* → *From scratch*).
 2. Turn on **Incoming Webhooks** → **Add New Webhook to Workspace**.
-3. Pick the channel for leads (e.g. `#altus-leads`) and authorize.
+3. Pick the channel — **`#gtm-signals`** — and authorize.
 4. Copy the webhook URL — looks like
    `https://hooks.slack.com/services/T000/B000/xxxxxxxx`.
 
-> Optional: create a second webhook for a different channel (e.g. `#altus-bench`) and set
-> it as `SLACK_BENCH_WEBHOOK_URL` to route bench applications separately. If unset, bench
-> notifications go to the main channel.
+Both Revenue Engine Check results and bench applications post to `#gtm-signals`.
+
+> Optional: create a second webhook for a different channel (e.g. `#gtm-bench`) and set it
+> as `SLACK_BENCH_WEBHOOK_URL` to route bench applications separately. If unset, bench
+> notifications also go to `#gtm-signals`.
 
 ## 2. (Optional) HubSpot historical record
 
