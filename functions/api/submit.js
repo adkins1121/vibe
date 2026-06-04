@@ -1,34 +1,42 @@
 // Cloudflare Pages Function — lead capture for Altus KC.
-// Runs at the edge (not a server you maintain). Receives a JSON POST from the
-// Revenue Engine Check results page and the Bench application form, then upserts
-// a HubSpot contact via the CRM API using a private-app token kept as a
-// Cloudflare secret (HUBSPOT_PRIVATE_APP_TOKEN) — never shipped to the browser.
+// Runs at the edge. Receives a JSON POST from the Revenue Engine Check results
+// page and the Bench application form, and posts a formatted notification to a
+// Slack channel via an Incoming Webhook (URL kept as a Cloudflare secret,
+// SLACK_WEBHOOK_URL — never shipped to the browser).
 //
-// Setup: see docs/hubspot-setup.md (create the private app + the custom contact
-// properties; no marketing forms needed).
+// HubSpot capture is stubbed for now (requires a plan upgrade) — see the clearly
+// marked block at the bottom to re-enable it alongside, or instead of, Slack.
+//
+// Setup: docs/capture-setup.md
 
-const HS_CONTACTS = 'https://api.hubapi.com/crm/v3/objects/contacts';
+// Optional separate channel for bench applications; falls back to the main hook.
+function webhookFor(kind, env) {
+  if (kind === 'bench' && env.SLACK_BENCH_WEBHOOK_URL) return env.SLACK_BENCH_WEBHOOK_URL;
+  return env.SLACK_WEBHOOK_URL;
+}
 
-// Allowlists — only these property keys are ever written, per kind. Anything else
-// in the request body is ignored, so the endpoint can't be used to write arbitrary
-// contact properties.
+// Allowlists — only these keys are ever read off the request, per kind. Anything
+// else in the body is ignored.
 const ALLOWED = {
   rec: [
     'rec_p1', 'rec_p2', 'rec_p3', 'rec_p4', 'rec_p5', 'rec_p6',
-    'rec_overall', 'rec_grade', 'rec_route', 'revenue_band', 'edge_band',
+    'rec_overall', 'rec_grade', 'rec_route', 'revenue_band', 'edge_band', 'weakest',
   ],
-  bench: ['linkedin', 'specialty', 'day_rate_band', 'availability'],
+  bench: ['full_name', 'linkedin', 'specialty', 'day_rate_band', 'availability'],
+};
+
+const REVENUE_BAND_LABEL = {
+  pre: 'Pre-revenue / <$1M', '1-2': '$1–2M', '2-10': '$2–10M',
+  '10-20': '$10–20M', '20-50': '$20–50M', '50+': '$50M+',
 };
 
 const json = (obj, status = 200) =>
-  new Response(JSON.stringify(obj), {
-    status,
-    headers: { 'Content-Type': 'application/json' },
-  });
+  new Response(JSON.stringify(obj), { status, headers: { 'Content-Type': 'application/json' } });
 
-function isEmail(v) {
-  return typeof v === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) && v.length <= 254;
-}
+const isEmail = (v) =>
+  typeof v === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) && v.length <= 254;
+
+const esc = (v) => String(v ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
 export async function onRequestPost(context) {
   const { request, env } = context;
@@ -41,80 +49,93 @@ export async function onRequestPost(context) {
   }
 
   const { kind, email } = payload || {};
-  if (kind !== 'rec' && kind !== 'bench') {
-    return json({ ok: false, error: 'bad_kind' }, 400);
-  }
-  if (!isEmail(email)) {
-    return json({ ok: false, error: 'bad_email' }, 400);
-  }
+  if (kind !== 'rec' && kind !== 'bench') return json({ ok: false, error: 'bad_kind' }, 400);
+  if (!isEmail(email)) return json({ ok: false, error: 'bad_email' }, 400);
 
-  // Build a clean properties object from the allowlist only.
-  const properties = { email: email.trim().toLowerCase() };
+  // Pull only allowlisted fields.
+  const data = { email: email.trim() };
   for (const key of ALLOWED[kind]) {
-    if (payload[key] != null && payload[key] !== '') {
-      properties[key] = String(payload[key]);
-    }
+    if (payload[key] != null && payload[key] !== '') data[key] = String(payload[key]);
   }
 
-  if (kind === 'bench') {
-    // Tag the applicant and split full_name into HubSpot's standard fields.
-    properties.bench_applicant = 'true';
-    const name = String(payload.full_name || '').trim();
-    if (name) {
-      const [first, ...rest] = name.split(/\s+/);
-      properties.firstname = first;
-      if (rest.length) properties.lastname = rest.join(' ');
-    }
-  }
-
-  const token = env.HUBSPOT_PRIVATE_APP_TOKEN;
-  if (!token) {
-    // Misconfiguration — log server-side, but don't break the visitor's flow.
-    console.error('[submit] HUBSPOT_PRIVATE_APP_TOKEN not set');
+  const webhook = webhookFor(kind, env);
+  if (!webhook) {
+    console.error('[submit] SLACK_WEBHOOK_URL not set');
     return json({ ok: false, error: 'not_configured' }, 503);
   }
 
+  const message = kind === 'rec' ? recMessage(data) : benchMessage(data);
+
   try {
-    const res = await upsertContact(token, properties);
+    const res = await fetch(webhook, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(message),
+    });
     if (!res.ok) {
       const detail = await res.text();
-      console.error('[submit] HubSpot error', res.status, detail);
-      return json({ ok: false, error: 'hubspot_error', status: res.status }, 502);
+      console.error('[submit] Slack error', res.status, detail);
+      return json({ ok: false, error: 'slack_error', status: res.status }, 502);
     }
     return json({ ok: true });
   } catch (err) {
-    console.error('[submit] fetch failed', err);
+    console.error('[submit] webhook fetch failed', err);
     return json({ ok: false, error: 'upstream_unreachable' }, 502);
   }
+
+  // --- HubSpot capture: STUBBED (re-enable when the plan supports it) ----------
+  // await upsertHubSpotContact(env.HUBSPOT_PRIVATE_APP_TOKEN, kind, data);
+  // (Implementation kept in git history — commit prior to the Slack switch.)
+  // -----------------------------------------------------------------------------
 }
 
-// Create the contact; on 409 (already exists) parse the existing ID and PATCH it.
-async function upsertContact(token, properties) {
-  const headers = {
-    Authorization: `Bearer ${token}`,
-    'Content-Type': 'application/json',
+export function recMessage(d) {
+  const band = REVENUE_BAND_LABEL[d.revenue_band] || d.revenue_band || '—';
+  const phases =
+    `P1 ${d.rec_p1 ?? '–'} · P2 ${d.rec_p2 ?? '–'} · P3 ${d.rec_p3 ?? '–'} · ` +
+    `P4 ${d.rec_p4 ?? '–'} · P5 ${d.rec_p5 ?? '–'} · P6 ${d.rec_p6 ?? '–'}`;
+  const edge = d.edge_band === 'true' ? '  •  ⚠️ edge band' : '';
+  const text = `New Revenue Engine Check — ${d.rec_grade || ''} (${d.rec_overall || '?'}/36), route ${d.rec_route || '?'}`;
+
+  return {
+    text, // fallback / notification text
+    blocks: [
+      { type: 'header', text: { type: 'plain_text', text: '🔧 New Revenue Engine Check', emoji: true } },
+      {
+        type: 'section',
+        fields: [
+          { type: 'mrkdwn', text: `*Grade:*\n${esc(d.rec_grade)} (${esc(d.rec_overall)}/36)` },
+          { type: 'mrkdwn', text: `*Route:*\n${esc(d.rec_route)}` },
+          { type: 'mrkdwn', text: `*Weakest phase:*\n${esc(d.weakest) || '—'}` },
+          { type: 'mrkdwn', text: `*Revenue band:*\n${esc(band)}${edge}` },
+          { type: 'mrkdwn', text: `*Email:*\n${esc(d.email)}` },
+        ],
+      },
+      { type: 'context', elements: [{ type: 'mrkdwn', text: `Phase scores  ${esc(phases)}` }] },
+    ],
   };
+}
 
-  let res = await fetch(HS_CONTACTS, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify({ properties }),
-  });
-
-  if (res.status === 409) {
-    const err = await res.json().catch(() => ({}));
-    const id = String(err.message || '').match(/Existing ID:\s*(\d+)/)?.[1];
-    if (id) {
-      const { email, ...rest } = properties; // don't re-write the identifier
-      res = await fetch(`${HS_CONTACTS}/${id}`, {
-        method: 'PATCH',
-        headers,
-        body: JSON.stringify({ properties: rest }),
-      });
-    }
-  }
-
-  return res;
+export function benchMessage(d) {
+  const text = `New bench application — ${d.full_name || d.email} (${d.specialty || '—'})`;
+  const linkedin = d.linkedin ? `<${esc(d.linkedin)}|${esc(d.linkedin)}>` : '—';
+  return {
+    text,
+    blocks: [
+      { type: 'header', text: { type: 'plain_text', text: '🪑 New bench application', emoji: true } },
+      {
+        type: 'section',
+        fields: [
+          { type: 'mrkdwn', text: `*Name:*\n${esc(d.full_name) || '—'}` },
+          { type: 'mrkdwn', text: `*Email:*\n${esc(d.email)}` },
+          { type: 'mrkdwn', text: `*Specialty:*\n${esc(d.specialty) || '—'}` },
+          { type: 'mrkdwn', text: `*Day rate:*\n${esc(d.day_rate_band) || '—'}` },
+          { type: 'mrkdwn', text: `*Availability:*\n${esc(d.availability) || '—'}` },
+        ],
+      },
+      { type: 'context', elements: [{ type: 'mrkdwn', text: `LinkedIn  ${linkedin}` }] },
+    ],
+  };
 }
 
 // Anything other than POST.

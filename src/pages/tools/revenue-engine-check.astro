@@ -388,18 +388,18 @@ const totalSteps = phases.length; // 6 question screens
     const email = document.getElementById('rec-email').value.trim();
     if (!email) return;
     const result = root._result || computeResult(state.answers);
-    await submitToHubSpot(email, result);
-    // Capture is best-effort — never block the visitor's report on a CRM hiccup.
+    await submitLead(email, result);
+    // Capture is best-effort — never block the visitor's report on a capture hiccup.
     document.getElementById('rec-capture-done').hidden = false;
     captureForm.querySelector('.rec-capture__row').hidden = true;
     captureForm.querySelector('.rec-capture__note').hidden = true;
   });
 
-  // Post to the Cloudflare Pages Function (functions/api/submit.js), which upserts
-  // the contact in HubSpot with a server-side private-app token. On local static
-  // preview the endpoint 404s — caught and logged, so the flow stays demonstrable.
-  async function submitToHubSpot(email, result) {
-    const { scores, overall, grade, routeKey } = result;
+  // Post to the Cloudflare Pages Function (functions/api/submit.js), which notifies
+  // Slack. On local static preview the endpoint 404s — caught and logged, so the
+  // flow stays demonstrable.
+  async function submitLead(email, result) {
+    const { scores, overall, grade, routeKey, weakest } = result;
     const body = {
       kind: 'rec',
       email,
@@ -408,6 +408,7 @@ const totalSteps = phases.length; // 6 question screens
       rec_overall: overall,
       rec_grade: grade.label,
       rec_route: routeKey,
+      weakest: weakest.name,
       revenue_band: state.quals.revenue_band || '',
       edge_band: isEdgeBand(state.quals),
     };
