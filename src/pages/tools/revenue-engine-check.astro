@@ -389,49 +389,37 @@ const totalSteps = phases.length; // 6 question screens
     if (!email) return;
     const result = root._result || computeResult(state.answers);
     await submitToHubSpot(email, result);
+    // Capture is best-effort — never block the visitor's report on a CRM hiccup.
     document.getElementById('rec-capture-done').hidden = false;
     captureForm.querySelector('.rec-capture__row').hidden = true;
     captureForm.querySelector('.rec-capture__note').hidden = true;
   });
 
-  // HubSpot Forms API — portal/form IDs are open items (build spec §9).
-  // Configure via build-time env; until then this no-ops gracefully so the
-  // prototype flow is fully demonstrable.
-  const HUBSPOT_PORTAL_ID = import.meta.env.PUBLIC_HUBSPOT_PORTAL_ID || '';
-  const HUBSPOT_FORM_ID = import.meta.env.PUBLIC_HUBSPOT_REC_FORM_ID || '';
-
+  // Post to the Cloudflare Pages Function (functions/api/submit.js), which upserts
+  // the contact in HubSpot with a server-side private-app token. On local static
+  // preview the endpoint 404s — caught and logged, so the flow stays demonstrable.
   async function submitToHubSpot(email, result) {
     const { scores, overall, grade, routeKey } = result;
-    const fields = [
-      { name: 'email', value: email },
-      { name: 'rec_p1', value: String(scores.P1) },
-      { name: 'rec_p2', value: String(scores.P2) },
-      { name: 'rec_p3', value: String(scores.P3) },
-      { name: 'rec_p4', value: String(scores.P4) },
-      { name: 'rec_p5', value: String(scores.P5) },
-      { name: 'rec_p6', value: String(scores.P6) },
-      { name: 'rec_overall', value: String(overall) },
-      { name: 'rec_grade', value: grade.label },
-      { name: 'rec_route', value: routeKey },
-      { name: 'revenue_band', value: state.quals.revenue_band || '' },
-      { name: 'edge_band', value: String(isEdgeBand(state.quals)) },
-    ];
-
-    if (!HUBSPOT_PORTAL_ID || !HUBSPOT_FORM_ID) {
-      console.info('[REC] HubSpot not configured — payload that would POST:', fields);
-      return; // graceful no-op for the prototype
-    }
+    const body = {
+      kind: 'rec',
+      email,
+      rec_p1: scores.P1, rec_p2: scores.P2, rec_p3: scores.P3,
+      rec_p4: scores.P4, rec_p5: scores.P5, rec_p6: scores.P6,
+      rec_overall: overall,
+      rec_grade: grade.label,
+      rec_route: routeKey,
+      revenue_band: state.quals.revenue_band || '',
+      edge_band: isEdgeBand(state.quals),
+    };
     try {
-      await fetch(
-        `https://api.hsforms.com/submissions/v3/integration/submit/${HUBSPOT_PORTAL_ID}/${HUBSPOT_FORM_ID}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ fields, context: { pageUri: location.href, pageName: 'Revenue Engine Check' } }),
-        },
-      );
+      const res = await fetch('/api/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) console.warn('[REC] capture not OK', res.status);
     } catch (err) {
-      console.warn('[REC] HubSpot submit failed', err);
+      console.info('[REC] capture endpoint unavailable (expected on static preview)', body);
     }
   }
 

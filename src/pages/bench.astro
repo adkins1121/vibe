@@ -102,28 +102,23 @@ import Base from '../layouts/Base.astro';
 
 <script>
   const form = document.getElementById('bench-form');
-  const HUBSPOT_PORTAL_ID = import.meta.env.PUBLIC_HUBSPOT_PORTAL_ID || '';
-  const HUBSPOT_FORM_ID = import.meta.env.PUBLIC_HUBSPOT_BENCH_FORM_ID || '';
 
   form?.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const data = new FormData(form);
-    const fields = Array.from(data.entries()).map(([name, value]) => ({ name, value: String(value) }));
-    fields.push({ name: 'lifecyclestage', value: 'bench_applicant' }); // tag (§5)
+    const data = Object.fromEntries(new FormData(form).entries());
+    const body = { kind: 'bench', ...data }; // full_name, email, linkedin, specialty, day_rate_band, availability
 
-    if (HUBSPOT_PORTAL_ID && HUBSPOT_FORM_ID) {
-      try {
-        await fetch(
-          `https://api.hsforms.com/submissions/v3/integration/submit/${HUBSPOT_PORTAL_ID}/${HUBSPOT_FORM_ID}`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ fields, context: { pageUri: location.href, pageName: 'Bench application' } }),
-          },
-        );
-      } catch (err) { console.warn('[bench] submit failed', err); }
-    } else {
-      console.info('[bench] HubSpot not configured — payload that would POST:', fields);
+    // Posts to the Cloudflare Pages Function, which tags the contact
+    // bench_applicant server-side (§5). Best-effort; never blocks the UX.
+    try {
+      const res = await fetch('/api/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) console.warn('[bench] capture not OK', res.status);
+    } catch (err) {
+      console.info('[bench] capture endpoint unavailable (expected on static preview)', body);
     }
 
     form.querySelector('.bench-form__grid').hidden = true;

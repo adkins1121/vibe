@@ -59,22 +59,27 @@ else:                         STRONG
 
 ## Configuration
 
-Copy `.env.example` to `.env` (the portal ID is already filled in). Set the same keys in
-Cloudflare Pages → Environment variables for production. Until the form GUIDs are present,
-forms log their payload to the console and no-op gracefully so the flow is fully demonstrable.
+Build-time public config lives in `.env` (copy from `.env.example`):
 
 ```
-PUBLIC_HUBSPOT_PORTAL_ID=244733039    # Altus KC portal (wired)
-PUBLIC_HUBSPOT_REC_FORM_ID=...        # Revenue Engine Check results — create form, paste GUID
-PUBLIC_HUBSPOT_BENCH_FORM_ID=...      # Bench applications — create form, paste GUID
-PUBLIC_BOOKING_URL=...                # Cal.com / Calendly discovery-call link
+PUBLIC_BOOKING_URL=...   # Cal.com / Calendly discovery-call link
 ```
 
-**HubSpot:** the portal ID is wired. The two forms and the custom contact properties
-(`rec_p1`–`rec_p6`, `rec_overall`, `rec_grade`, `rec_route`, `revenue_band`, `edge_band`,
-plus the bench fields) still need to be created in the HubSpot UI — a HubSpot connector
-can't create Forms or property definitions. **See [`docs/hubspot-setup.md`](docs/hubspot-setup.md)**
-for the exact, copy-paste recipe (≈10 min). Paste the two GUIDs into `.env` and capture goes live.
+**Lead capture** runs through a Cloudflare Pages Function (`functions/api/submit.js`) — the
+browser POSTs to `/api/submit`, which upserts a HubSpot contact via the CRM API using a
+**server-side private-app token** (`HUBSPOT_PRIVATE_APP_TOKEN`, a Cloudflare secret — never
+in the bundle). No marketing forms to build, token never reaches the client. Capture is
+best-effort: on local static `npm run preview` (Functions don't run) the flow still works
+and logs the payload to the console.
+
+Two one-time HubSpot steps remain (a connector can't do either): create the custom contact
+properties (`rec_p1`–`rec_p6`, `rec_overall`, `rec_grade`, `rec_route`, `revenue_band`,
+`edge_band`, plus the bench fields) and a private app for the token.
+**See [`docs/hubspot-setup.md`](docs/hubspot-setup.md)** for the exact recipe. Portal ID
+`244733039`.
+
+To exercise the Function locally: put the token in `.dev.vars` (gitignored) and run
+`npx wrangler pages dev ./dist` after a build.
 
 Also pending from the spec's open-items list: confirm the six phase names against the
 paid diagnostic, the Cal.com booking link (placeholder in `how-i-work.astro`), client-name
