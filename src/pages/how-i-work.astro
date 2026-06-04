@@ -3,8 +3,8 @@ import Base from '../layouts/Base.astro';
 import CTAButton from '../components/CTAButton.astro';
 import { engagements, notAFit } from '../data/engagements.js';
 
-// Cal.com link is an open item (build spec §9). Placeholder until provided.
-const CALCOM_URL = 'https://cal.com/altus-kc/discovery';
+// Booking link comes from PUBLIC_BOOKING_URL (Cal.com/Calendly). Open item §9.
+const CALCOM_URL = import.meta.env.PUBLIC_BOOKING_URL || 'https://cal.com/altus-kc/discovery';
 ---
 
 <Base
