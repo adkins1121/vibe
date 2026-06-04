@@ -3,8 +3,8 @@ import Base from '../layouts/Base.astro';
 import CTAButton from '../components/CTAButton.astro';
 import { engagements, notAFit } from '../data/engagements.js';
 
-// Booking link comes from PUBLIC_BOOKING_URL (Cal.com/Calendly). Open item §9.
-const CALCOM_URL = import.meta.env.PUBLIC_BOOKING_URL || 'https://cal.com/altus-kc/discovery';
+// Booking link comes from PUBLIC_BOOKING_URL (TidyCal). Inline embed below.
+const BOOKING_URL = import.meta.env.PUBLIC_BOOKING_URL || 'https://tidycal.com/madkins/60-min-mike-adkins';
 ---
 
 <Base
@@ -110,11 +110,19 @@ const CALCOM_URL = import.meta.env.PUBLIC_BOOKING_URL || 'https://cal.com/altus-
       </p>
       <!-- Cal.com inline embed mount. Link is an open item (§9). -->
       <div class="cal-embed">
-        <p class="cal-embed__label text-muted">Cal.com embed mounts here at build time</p>
-        <CTAButton href={CALCOM_URL} size="lg">Book the discovery call</CTAButton>
-        <p class="cal-embed__alt">
-          <a href="/tools/revenue-engine-check">Or run the Revenue Engine Check first →</a>
-        </p>
+        <iframe
+          class="cal-embed__frame"
+          src={BOOKING_URL}
+          title="Book a 60-minute call with Mike Adkins"
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade"
+        ></iframe>
+        <div class="cal-embed__fallback">
+          <CTAButton href={BOOKING_URL} size="lg">Book the discovery call</CTAButton>
+          <p class="cal-embed__alt">
+            <a href="/tools/revenue-engine-check">Or run the Revenue Engine Check first →</a>
+          </p>
+        </div>
       </div>
     </div>
   </section>
@@ -198,13 +206,24 @@ const CALCOM_URL = import.meta.env.PUBLIC_BOOKING_URL || 'https://cal.com/altus-
   .book { background: var(--card-bg); }
   .cal-embed {
     margin-top: 2rem;
-    padding: clamp(2rem, 5vw, 3.5rem);
-    border: 1px dashed var(--accent-border);
+    border: 1px solid var(--border);
     border-radius: var(--radius);
     background: var(--white);
+    overflow: hidden;
+    text-align: left;
   }
-  .cal-embed__label { font-size: 0.85rem; margin-bottom: 1.2rem; }
-  .cal-embed__alt { margin: 1.4rem 0 0; font-size: 0.95rem; }
+  .cal-embed__frame {
+    display: block;
+    width: 100%;
+    height: 720px;
+    border: 0;
+  }
+  .cal-embed__fallback {
+    padding: 1.4rem clamp(1.25rem, 4vw, 2rem) 1.6rem;
+    border-top: 1px solid var(--border);
+    text-align: center;
+  }
+  .cal-embed__alt { margin: 1rem 0 0; font-size: 0.95rem; }
 
   @media (max-width: 760px) {
     .eng-table__head, .eng-table__row { grid-template-columns: 1fr; gap: 0.4rem; }

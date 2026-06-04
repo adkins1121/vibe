@@ -30,7 +30,7 @@ node test/score.test.mjs   # prove the §6 routing vectors pass
 
 - **Home** — positioning hero, three engagement cards, proof strip, single accent CTA.
 - **How I work** — engagement table + per-engagement sections, pricing philosophy,
-  the full *Not a Fit* list (published as a trust weapon), Cal.com embed mount.
+  the full *Not a Fit* list (published as a trust weapon), inline TidyCal booking embed.
 - **Proof** — three anonymized case teardowns (situation → broken → built → moved).
 - **Field Notes** — content collection grouped by pillar, two seed posts, dynamic `[slug]`.
 - **Revenue Engine Check** (`/tools/revenue-engine-check`) — the flagship. Qualifiers →
@@ -62,7 +62,7 @@ else:                         STRONG
 Build-time public config lives in `.env` (copy from `.env.example`):
 
 ```
-PUBLIC_BOOKING_URL=...   # Cal.com / Calendly discovery-call link
+PUBLIC_BOOKING_URL=...   # TidyCal / Cal.com / Calendly discovery-call link
 ```
 
 **Lead capture** runs through a Cloudflare Pages Function (`functions/api/submit.js`) — the
@@ -83,9 +83,9 @@ To exercise the Function locally (real Slack/HubSpot), copy `.dev.vars.example` 
 Wrangler with the Function live). `npm test` runs the scoring + capture test suites.
 
 Also pending from the spec's open-items list: confirm the six phase names against the
-paid diagnostic, the Cal.com booking link (placeholder in `how-i-work.astro`), client-name
-approval for case studies (anonymized until then), final logo SVGs (typographic wordmark
-in place), and exact price bands (placeholders in `src/data/engagements.js`).
+paid diagnostic, client-name approval for case studies (anonymized until then), final logo
+SVGs (typographic wordmark in place), and exact price bands (placeholders in
+`src/data/engagements.js`). The booking link (TidyCal) is wired.
 
 ## Brand rules enforced
 
