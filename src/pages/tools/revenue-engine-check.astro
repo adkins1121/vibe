@@ -564,20 +564,8 @@ const totalSteps = phases.length; // 6 question screens
     align-items: start;
   }
   .rec-bars { display: flex; flex-direction: column; gap: 0.7rem; }
-  .rec-bar { padding: 1rem 1.1rem; border: 1px solid var(--border); border-radius: var(--radius); background: var(--white); }
-  .rec-bar--weak { border-color: var(--accent-border); background: var(--accent-glow); }
-  .rec-bar__head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.55rem; gap: 1rem; }
-  .rec-bar__name { font-family: var(--font-head); font-weight: 600; font-size: 0.95rem; }
-  .rec-bar__name em {
-    font-style: normal; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em;
-    text-transform: uppercase; color: var(--accent); margin-left: 0.6rem;
-  }
-  .rec-bar__score { font-family: var(--font-head); font-weight: 700; }
-  .rec-bar__score i { color: var(--text-muted); font-style: normal; font-size: 0.78rem; }
-  .rec-bar__track { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; }
-  .rec-bar__seg { height: 8px; border-radius: 2px; background: var(--card-hover); }
-  .rec-bar__seg.on { background: var(--mid-green); }
-  .rec-bar--weak .rec-bar__seg.on { background: var(--accent); }
+  /* .rec-bar* rules live in the is:global block below — these elements are
+     created at runtime by JS, so Astro's scoped styles wouldn't reach them. */
 
   .rec-route { position: sticky; top: 140px; display: flex; flex-direction: column; gap: 1.25rem; }
   .rec-route__card {
@@ -624,6 +612,28 @@ const totalSteps = phases.length; // 6 question screens
     .rec-route__card { background: #fff !important; color: #000 !important; border: 1px solid #ccc; }
     .rec-route__hook { color: #000 !important; }
     body { background: #fff; }
-    .rec-bar, .rec-bar--weak { background: #fff !important; }
+  }
+</style>
+
+<!-- Global block: the phase bars are built at runtime via innerHTML, so they
+     never receive Astro's scoping attribute. These rules must NOT be scoped. -->
+<style is:global>
+  #rec-bars .rec-bar { padding: 1rem 1.1rem; border: 1px solid var(--border); border-radius: var(--radius); background: var(--white); }
+  #rec-bars .rec-bar--weak { border-color: var(--accent-border); background: var(--accent-glow); }
+  #rec-bars .rec-bar__head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.55rem; gap: 1rem; }
+  #rec-bars .rec-bar__name { font-family: var(--font-head); font-weight: 600; font-size: 0.95rem; }
+  #rec-bars .rec-bar__name em {
+    font-style: normal; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--accent); margin-left: 0.6rem;
+  }
+  #rec-bars .rec-bar__score { font-family: var(--font-head); font-weight: 700; }
+  #rec-bars .rec-bar__score i { color: var(--text-muted); font-style: normal; font-size: 0.78rem; }
+  #rec-bars .rec-bar__track { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; }
+  #rec-bars .rec-bar__seg { height: 8px; border-radius: 2px; background: var(--card-hover); }
+  #rec-bars .rec-bar__seg.on { background: var(--mid-green); }
+  #rec-bars .rec-bar--weak .rec-bar__seg.on { background: var(--accent); }
+
+  @media print {
+    #rec-bars .rec-bar, #rec-bars .rec-bar--weak { background: #fff !important; }
   }
 </style>
