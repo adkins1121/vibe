@@ -1,0 +1,120 @@
+---
+import Base from '../layouts/Base.astro';
+import CTAButton from '../components/CTAButton.astro';
+import { cases } from '../data/proof.js';
+import { engagements } from '../data/engagements.js';
+
+const engName = (id) => engagements.find((e) => e.id === id)?.name ?? 'How I work';
+---
+
+<Base
+  pageLabel="Proof"
+  description="Case studies as pattern teardowns: what was broken at a founder-led B2B company, what got built, and the number that moved. Anonymized."
+>
+  <section class="page-head">
+    <div class="wrap">
+      <span class="eyebrow">Proof</span>
+      <h1>What was actually broken — and what fixed it.</h1>
+      <p class="lede">
+        No logo wall, no testimonial theater. Three teardowns: the situation, what was
+        broken, what got built, and the thing that moved. Anonymized until client names
+        clear — the pattern is the point.
+      </p>
+    </div>
+  </section>
+
+  <section class="section-tight">
+    <div class="wrap">
+      <div class="cases">
+        {cases.map((c) => (
+          <article class="case">
+            <header class="case__head">
+              <span class="case__pattern">{c.client ?? c.pattern}</span>
+            </header>
+            <div class="case__grid">
+              <div class="case__block">
+                <p class="case__label">Situation</p>
+                <p>{c.situation}</p>
+              </div>
+              <div class="case__block">
+                <p class="case__label">What was broken</p>
+                <p>{c.broken}</p>
+              </div>
+              <div class="case__block">
+                <p class="case__label">What was built</p>
+                <p>{c.built}</p>
+              </div>
+              <div class="case__block case__block--moved">
+                <p class="case__label">What moved</p>
+                <p>{c.moved}</p>
+              </div>
+            </div>
+            <footer class="case__foot">
+              <a href="/how-i-work" class="case__link">
+                This was a {engName(c.engagement)} →
+              </a>
+            </footer>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="closer">
+    <div class="wrap-narrow center">
+      <h2>Recognize your own engine in one of these?</h2>
+      <p class="lede mx-auto" style="margin-inline:auto;">
+        Score yours in three minutes. The Revenue Engine Check tells you which phase is
+        leaking before we ever talk.
+      </p>
+      <div style="margin-top:2rem;">
+        <CTAButton href="/tools/revenue-engine-check" size="lg">Run the Revenue Engine Check</CTAButton>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .page-head { padding-top: clamp(3rem, 6vw, 5rem); padding-bottom: clamp(1.5rem, 3vw, 2.5rem); }
+  .page-head h1 { max-width: 16ch; }
+
+  .cases { display: flex; flex-direction: column; gap: 1.5rem; }
+  .case {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: clamp(1.5rem, 4vw, 2.5rem);
+  }
+  .case__head { margin-bottom: 1.6rem; }
+  .case__pattern {
+    font-family: var(--font-head);
+    font-weight: 800;
+    font-size: 1.4rem;
+    color: var(--evergreen);
+  }
+  .case__grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.6rem 2.5rem;
+  }
+  .case__label {
+    font-family: var(--font-head);
+    font-weight: 700;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin: 0 0 0.5rem;
+  }
+  .case__block p:last-child { margin-bottom: 0; }
+  .case__block--moved .case__label { color: var(--accent); }
+  .case__block--moved p { color: var(--evergreen); font-weight: 500; }
+  .case__foot { margin-top: 1.8rem; padding-top: 1.4rem; border-top: 1px solid var(--border); }
+  .case__link { font-family: var(--font-head); font-weight: 700; font-size: 0.92rem; }
+
+  .closer { background: var(--card-bg); border-top: 1px solid var(--border); }
+
+  @media (max-width: 680px) {
+    .case__grid { grid-template-columns: 1fr; gap: 1.4rem; }
+  }
+</style>

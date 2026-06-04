@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <rect width="32" height="32" rx="3" fill="#1A3C34"/>
+  <text x="16" y="22" font-family="Montserrat, Arial, sans-serif" font-size="16"
+        font-weight="800" text-anchor="middle" letter-spacing="0.5">
+    <tspan fill="#F6F3EE">A</tspan><tspan fill="#3D8C62">K</tspan>
+  </text>
+</svg>

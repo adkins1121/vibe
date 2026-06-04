@@ -1,0 +1,69 @@
+---
+import Base from '../layouts/Base.astro';
+const updated = 'June 2026';
+---
+
+<Base
+  pageLabel="Privacy"
+  description="How Altus KC handles the data you share — including the Revenue Engine Check diagnostic and bench applications."
+>
+  <section class="legal">
+    <div class="wrap-narrow">
+      <span class="eyebrow">Privacy</span>
+      <h1>Privacy notice</h1>
+      <p class="text-muted">Last updated {updated}. Plain-English, because that’s the whole point.</p>
+
+      <h2>The short version</h2>
+      <p>
+        Altus KC is a one-operator firm run by Mike Adkins. I collect the minimum I need to
+        do the work and follow up honestly. I don’t sell your data, I don’t rent lists, and
+        I don’t run third-party advertising trackers on this site.
+      </p>
+
+      <h2>The Revenue Engine Check</h2>
+      <p>
+        You can take the diagnostic without giving me anything — your answers are scored in
+        your own browser and stored locally on your device so a refresh doesn’t wipe them.
+        I don’t receive your answers unless you choose to.
+      </p>
+      <p>
+        If you request the full PDF report, you give me your email. At that point I receive
+        your phase scores, overall score, grade, recommended track, and revenue band, which
+        are stored in my CRM (HubSpot) so I can send the report and a short, relevant
+        follow-up about your weakest phase. You can ask me to delete all of it at any time.
+      </p>
+
+      <h2>Bench applications</h2>
+      <p>
+        If you apply to the Operator Bench, I store what you submit — name, email, LinkedIn,
+        specialty, rate band, and availability — in my CRM so I can reach out when an
+        engagement fits. There is no public roster. Your details are never published.
+      </p>
+
+      <h2>Analytics</h2>
+      <p>
+        I use privacy-respecting, cookieless analytics (Plausible or Cloudflare Web
+        Analytics) to see which pages get read. It doesn’t track you across sites and
+        doesn’t need a cookie banner because it doesn’t set tracking cookies.
+      </p>
+
+      <h2>Your choices</h2>
+      <ul>
+        <li>Email me at <a href="mailto:mike@altus-kc.com">mike@altus-kc.com</a> to access or delete anything I hold about you.</li>
+        <li>Clear the diagnostic’s saved answers any time by clearing your browser storage for this site, or using “Start over” on the results page.</li>
+        <li>Unsubscribe from any follow-up with one click; I honor it immediately.</li>
+      </ul>
+
+      <p class="text-muted legal__note">
+        This is a prototype notice for review. Final language should be confirmed against
+        applicable requirements before launch.
+      </p>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .legal { padding-top: clamp(3rem, 6vw, 5rem); }
+  .legal h2 { font-size: 1.4rem; margin-top: 2.4rem; }
+  .legal__note { font-size: 0.85rem; margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+</style>

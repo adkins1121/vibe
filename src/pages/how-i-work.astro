@@ -1,0 +1,215 @@
+---
+import Base from '../layouts/Base.astro';
+import CTAButton from '../components/CTAButton.astro';
+import { engagements, notAFit } from '../data/engagements.js';
+
+// Cal.com link is an open item (build spec §9). Placeholder until provided.
+const CALCOM_URL = 'https://cal.com/altus-kc/discovery';
+---
+
+<Base
+  pageLabel="How I work"
+  description="Three engagement types, the pricing philosophy, and the full not-a-fit list. Operator, not advisor."
+>
+  <section class="page-head">
+    <div class="wrap">
+      <span class="eyebrow">How I work</span>
+      <h1>Fixed scope. Operator pricing. A short list of who this isn’t for.</h1>
+      <p class="lede">
+        Three ways to work together, one philosophy underneath all of them: I price the
+        outcome, not my hours — and I’d rather tell you it’s not a fit than take the money.
+      </p>
+    </div>
+  </section>
+
+  <!-- Engagement table -->
+  <section class="section-tight">
+    <div class="wrap">
+      <div class="eng-table" role="table" aria-label="Engagement types">
+        <div class="eng-table__head" role="row">
+          <span role="columnheader">Engagement</span>
+          <span role="columnheader">For</span>
+          <span role="columnheader">Shape</span>
+        </div>
+        {engagements.map((e) => (
+          <a class="eng-table__row" role="row" href={`#${e.id}`}>
+            <span role="cell"><strong>{e.name}</strong></span>
+            <span role="cell" class="text-secondary">{e.forWho}</span>
+            <span role="cell" class="text-secondary">{e.price}</span>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- Per-engagement sections -->
+  {engagements.map((e, i) => (
+    <section class={`eng-section ${i % 2 ? 'eng-section--alt' : ''}`} id={e.id}>
+      <div class="wrap eng-section__inner">
+        <div class="eng-section__meta">
+          <span class="eng-section__num">0{i + 1}</span>
+          <p class="eng-section__price">{e.price}</p>
+        </div>
+        <div class="eng-section__body">
+          <h2>{e.name}</h2>
+          <p class="lede">{e.tagline}</p>
+          <p>{e.detail}</p>
+          <p class="eng-section__for text-secondary"><strong>Best for:</strong> {e.forWho}</p>
+          <CTAButton href="#book" variant="ghost">{e.cta}</CTAButton>
+        </div>
+      </div>
+    </section>
+  ))}
+
+  <!-- Pricing philosophy -->
+  <section>
+    <div class="wrap-narrow">
+      <span class="eyebrow">Pricing philosophy</span>
+      <h2>Fixed beats hourly. Scope flexes, the price doesn’t.</h2>
+      <p>
+        Hourly billing rewards slow work and punishes the operator who moves fast. So I
+        don’t do it. Every engagement is a fixed fee tied to a defined scope and a clear
+        outcome — you know the number before we start and it doesn’t move.
+      </p>
+      <p>
+        I don’t discount. If the budget’s tight, we adjust scope — cut the surface area,
+        keep the rate. A discount is just a quiet admission the first number was made up.
+        Mine isn’t.
+      </p>
+    </div>
+  </section>
+
+  <!-- Not a fit list (full — trust weapon) -->
+  <section class="notfit">
+    <div class="wrap-narrow">
+      <span class="eyebrow">Not a fit</span>
+      <h2>Who I’ll turn down — published in full.</h2>
+      <p class="text-secondary">
+        Most consultants hide this. I publish it, because the fastest way to earn a good
+        client is to be honest with the ones I can’t help.
+      </p>
+      <ul class="notfit__list">
+        {notAFit.map((item) => (
+          <li class="notfit__item">{item}</li>
+        ))}
+      </ul>
+      <p class="text-secondary">
+        Land on this list? <a href="/not-a-fit">Here’s what I’d read instead →</a>
+      </p>
+    </div>
+  </section>
+
+  <!-- Booking -->
+  <section class="book" id="book">
+    <div class="wrap-narrow center">
+      <span class="eyebrow">Book the call</span>
+      <h2>30 minutes. We find out if your engine is mine to fix.</h2>
+      <p class="lede mx-auto" style="margin-inline:auto;">
+        Run the Revenue Engine Check first if you want the call to start with context
+        already loaded — your weakest phase, named, before we talk.
+      </p>
+      <!-- Cal.com inline embed mount. Link is an open item (§9). -->
+      <div class="cal-embed">
+        <p class="cal-embed__label text-muted">Cal.com embed mounts here at build time</p>
+        <CTAButton href={CALCOM_URL} size="lg">Book the discovery call</CTAButton>
+        <p class="cal-embed__alt">
+          <a href="/tools/revenue-engine-check">Or run the Revenue Engine Check first →</a>
+        </p>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .page-head { padding-top: clamp(3rem, 6vw, 5rem); padding-bottom: clamp(1.5rem, 3vw, 2.5rem); }
+  .page-head h1 { max-width: 18ch; }
+
+  .eng-table { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .eng-table__head,
+  .eng-table__row {
+    display: grid;
+    grid-template-columns: 1.2fr 1.6fr 1fr;
+    gap: 1.5rem;
+    padding: 1rem 1.4rem;
+    align-items: center;
+  }
+  .eng-table__head {
+    background: var(--evergreen);
+    color: var(--cream);
+    font-family: var(--font-head);
+    font-weight: 700;
+    font-size: 0.78rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .eng-table__row {
+    border-top: 1px solid var(--border);
+    background: var(--white);
+    color: inherit;
+    border-bottom: 0;
+    transition: background 0.15s ease;
+  }
+  .eng-table__row:first-of-type { border-top: 0; }
+  .eng-table__row:hover { background: var(--card-hover); border-bottom: 0; }
+
+  .eng-section { padding-block: clamp(3rem, 6vw, 5rem); border-top: 1px solid var(--border); }
+  .eng-section--alt { background: var(--card-bg); }
+  .eng-section__inner { display: grid; grid-template-columns: 200px 1fr; gap: clamp(1.5rem, 4vw, 3.5rem); }
+  .eng-section__num {
+    font-family: var(--font-head);
+    font-weight: 800;
+    font-size: 2.5rem;
+    color: var(--accent);
+    display: block;
+  }
+  .eng-section__price {
+    font-family: var(--font-head);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-top: 0.6rem;
+  }
+  .eng-section__for { margin: 1.2rem 0 1.6rem; }
+
+  .notfit { background: var(--evergreen); color: var(--cream); }
+  .notfit :global(.eyebrow) { color: var(--accent); }
+  .notfit h2 { color: var(--cream); }
+  .notfit .text-secondary { color: rgba(246, 243, 238, 0.7); }
+  .notfit__list { list-style: none; padding: 0; margin: 1.8rem 0; }
+  .notfit__item {
+    padding: 0.9rem 0 0.9rem 2rem;
+    border-top: 1px solid rgba(246, 243, 238, 0.14);
+    position: relative;
+    max-width: none;
+    color: rgba(246, 243, 238, 0.92);
+  }
+  .notfit__item::before {
+    content: '✕';
+    position: absolute;
+    left: 0;
+    color: var(--accent);
+    font-weight: 700;
+  }
+  .notfit a { color: var(--accent); }
+  .notfit a:hover { color: var(--cream); }
+
+  .book { background: var(--card-bg); }
+  .cal-embed {
+    margin-top: 2rem;
+    padding: clamp(2rem, 5vw, 3.5rem);
+    border: 1px dashed var(--accent-border);
+    border-radius: var(--radius);
+    background: var(--white);
+  }
+  .cal-embed__label { font-size: 0.85rem; margin-bottom: 1.2rem; }
+  .cal-embed__alt { margin: 1.4rem 0 0; font-size: 0.95rem; }
+
+  @media (max-width: 760px) {
+    .eng-table__head, .eng-table__row { grid-template-columns: 1fr; gap: 0.4rem; }
+    .eng-table__head { display: none; }
+    .eng-section__inner { grid-template-columns: 1fr; }
+    .eng-section__num { font-size: 2rem; }
+  }
+</style>

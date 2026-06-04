@@ -1,0 +1,77 @@
+---
+// PhaseBar — renders a 0–6 phase score as a segmented bar.
+// Weakest phase is highlighted with --accent-border.
+interface Props {
+  label: string;
+  score: number;      // 0–6
+  weakest?: boolean;
+}
+const { label, score, weakest = false } = Astro.props;
+const clamped = Math.max(0, Math.min(6, score));
+const segments = Array.from({ length: 6 }, (_, i) => i < clamped);
+---
+<div class={`phasebar ${weakest ? 'phasebar--weakest' : ''}`}>
+  <div class="phasebar__head">
+    <span class="phasebar__label">{label}{weakest && <span class="phasebar__flag">weakest phase</span>}</span>
+    <span class="phasebar__score">{clamped}<span class="phasebar__max">/6</span></span>
+  </div>
+  <div class="phasebar__track" role="img" aria-label={`${label}: ${clamped} out of 6`}>
+    {segments.map((on) => <span class={`seg ${on ? 'seg--on' : ''}`}></span>)}
+  </div>
+</div>
+
+<style>
+  .phasebar {
+    padding: 1rem 1.1rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--white);
+  }
+  .phasebar--weakest {
+    border-color: var(--accent-border);
+    background: var(--accent-glow);
+  }
+  .phasebar__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 0.6rem;
+    gap: 1rem;
+  }
+  .phasebar__label {
+    font-family: var(--font-head);
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--evergreen);
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+  }
+  .phasebar__flag {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .phasebar__score {
+    font-family: var(--font-head);
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--evergreen);
+  }
+  .phasebar__max { color: var(--text-muted); font-size: 0.8rem; font-weight: 500; }
+  .phasebar__track {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 4px;
+  }
+  .seg {
+    height: 8px;
+    border-radius: 2px;
+    background: var(--card-hover);
+  }
+  .seg--on { background: var(--mid-green); }
+  .phasebar--weakest .seg--on { background: var(--accent); }
+</style>

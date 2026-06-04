@@ -1,0 +1,109 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getCollection } from 'astro:content';
+
+const pillars = ['Teardowns', 'AI that shipped', 'The KC angle'];
+const posts = (await getCollection('field-notes', ({ data }) => !data.draft))
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+
+const fmt = (d) => d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+const byPillar = (p) => posts.filter((post) => post.data.pillar === p);
+---
+
+<Base
+  pageLabel="Field Notes"
+  description="Operator field notes — not thought leadership. Teardowns, AI that shipped, and the KC logistics angle. The archive that converts."
+>
+  <section class="page-head">
+    <div class="wrap">
+      <span class="eyebrow">Field Notes</span>
+      <h1>Operator field notes. Not thought leadership.</h1>
+      <p class="lede">
+        Build logs and teardowns from real work. Three pillars, biweekly cadence, no
+        recycled LinkedIn platitudes. The site is the archive; LinkedIn is the distribution.
+      </p>
+    </div>
+  </section>
+
+  <section class="section-tight">
+    <div class="wrap">
+      {pillars.map((pillar) => {
+        const group = byPillar(pillar);
+        if (!group.length) return null;
+        return (
+          <div class="fn-group">
+            <h2 class="fn-group__title">{pillar}</h2>
+            <ul class="fn-list">
+              {group.map((post) => (
+                <li class="fn-item">
+                  <a href={`/field-notes/${post.slug}`} class="fn-link">
+                    <span class="fn-item__date">{fmt(post.data.date)}</span>
+                    <span class="fn-item__title">{post.data.title}</span>
+                    <span class="fn-item__summary text-secondary">{post.data.summary}</span>
+                    <span class="fn-item__more">Read →</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        );
+      })}
+    </div>
+  </section>
+
+  <!-- "What I'm reading" footer block (not a page) -->
+  <section class="reading">
+    <div class="wrap-narrow">
+      <span class="eyebrow eyebrow--muted">What I’m reading</span>
+      <p class="text-secondary">
+        A rotating shelf of what’s shaping the work right now — operator memoirs, freight
+        and supply-chain dispatches, and the occasional AI build writeup that isn’t hype.
+        Curation is seasoning, not a surface — so it lives here, not on its own page.
+      </p>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .page-head { padding-top: clamp(3rem, 6vw, 5rem); padding-bottom: clamp(1rem, 3vw, 2rem); }
+  .page-head h1 { max-width: 18ch; }
+
+  .fn-group { margin-bottom: clamp(2.5rem, 5vw, 4rem); }
+  .fn-group__title {
+    font-size: 0.85rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 0.8rem; margin-bottom: 0.5rem;
+  }
+  .fn-list { list-style: none; padding: 0; margin: 0; }
+  .fn-item { border-bottom: 1px solid var(--border); }
+  .fn-link {
+    display: grid;
+    grid-template-columns: 130px 1fr auto;
+    gap: 0.4rem 1.5rem;
+    padding: 1.4rem 0;
+    color: inherit; border-bottom: 0;
+    align-items: baseline;
+  }
+  .fn-link:hover { border-bottom: 0; }
+  .fn-link:hover .fn-item__title { color: var(--accent); }
+  .fn-item__date {
+    font-family: var(--font-head); font-weight: 600; font-size: 0.82rem; color: var(--text-muted);
+    grid-row: 1; text-transform: uppercase; letter-spacing: 0.03em;
+  }
+  .fn-item__title {
+    font-family: var(--font-head); font-weight: 700; font-size: 1.2rem; line-height: 1.3;
+    grid-column: 2; grid-row: 1; transition: color 0.12s ease; max-width: none;
+  }
+  .fn-item__summary { grid-column: 2; grid-row: 2; margin: 0; }
+  .fn-item__more {
+    grid-column: 3; grid-row: 1; font-family: var(--font-head); font-weight: 700;
+    font-size: 0.9rem; color: var(--accent);
+  }
+
+  .reading { background: var(--card-bg); border-top: 1px solid var(--border); }
+
+  @media (max-width: 680px) {
+    .fn-link { grid-template-columns: 1fr; gap: 0.3rem; }
+    .fn-item__date, .fn-item__title, .fn-item__summary { grid-column: 1; }
+    .fn-item__more { grid-column: 1; grid-row: auto; margin-top: 0.4rem; }
+  }
+</style>

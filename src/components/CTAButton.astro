@@ -1,0 +1,60 @@
+---
+// The single accent moment. Solid = primary (one per section).
+// Ghost = secondary. Square-leaning, 4px max radius, no shadow.
+interface Props {
+  href: string;
+  variant?: 'solid' | 'ghost';
+  size?: 'md' | 'lg';
+  class?: string;
+}
+const { href, variant = 'solid', size = 'md', class: cls = '' } = Astro.props;
+const external = href.startsWith('http');
+---
+<a
+  href={href}
+  class={`btn btn--${variant} btn--${size} ${cls}`}
+  {...(external ? { target: '_blank', rel: 'noopener' } : {})}
+>
+  <slot />
+</a>
+
+<style>
+  .btn {
+    font-family: var(--font-head);
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    border-radius: var(--radius);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5em;
+    text-align: center;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+    border: 1px solid transparent;
+  }
+  .btn:hover { border-bottom-width: 1px; }
+  .btn--md { font-size: 0.95rem; padding: 0.75rem 1.4rem; }
+  .btn--lg { font-size: 1.05rem; padding: 0.95rem 1.8rem; }
+
+  .btn--solid {
+    background: var(--accent);
+    color: var(--white);
+    border-color: var(--accent);
+  }
+  .btn--solid:hover {
+    background: var(--mid-green);
+    border-color: var(--mid-green);
+    color: var(--white);
+  }
+
+  .btn--ghost {
+    background: transparent;
+    color: var(--evergreen);
+    border-color: var(--border);
+  }
+  .btn--ghost:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+</style>

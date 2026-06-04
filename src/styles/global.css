@@ -1,0 +1,145 @@
+/* ============================================================
+   Altus KC — Global base styles
+   Built on tokens.css. No framework. Square-leaning, cream canvas,
+   one accent moment per section.
+   ============================================================ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--cream);
+  color: var(--evergreen);
+  font-family: var(--font-body);
+  font-size: var(--body);
+  line-height: 1.6;
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* ---------- Typography ---------- */
+
+h1, h2, h3, h4 {
+  font-family: var(--font-head);
+  color: var(--evergreen);
+  line-height: 1.12;
+  letter-spacing: -0.01em;
+  margin: 0 0 0.5em;
+  font-weight: 800;
+  /* sentence-case headings — enforced in copy, not text-transform */
+}
+
+h1 { font-size: var(--h1); font-weight: 800; }
+h2 { font-size: var(--h2); font-weight: 700; }
+h3 { font-size: var(--h3); font-weight: 700; letter-spacing: -0.005em; }
+
+p { margin: 0 0 1.1em; }
+
+p, li { max-width: var(--maxw-text); }
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+a:hover {
+  border-bottom-color: var(--accent);
+}
+
+strong { font-weight: 600; color: var(--evergreen); }
+
+ul, ol { padding-left: 1.2em; }
+li { margin-bottom: 0.4em; }
+
+hr {
+  border: 0;
+  border-top: 1px solid var(--border);
+  margin: var(--section-y) 0;
+}
+
+/* ---------- Layout primitives ---------- */
+
+.wrap {
+  width: 100%;
+  max-width: var(--maxw);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+.wrap-narrow {
+  width: 100%;
+  max-width: 760px;
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+section { padding-block: var(--section-y); }
+
+.section-tight { padding-block: clamp(2.5rem, 5vw, 4rem); }
+
+/* ---------- Eyebrow label (ALL CAPS allowed here) ---------- */
+
+.eyebrow {
+  font-family: var(--font-head);
+  font-size: var(--eyebrow);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0 0 1rem;
+  display: block;
+}
+
+.eyebrow--muted { color: var(--text-secondary); }
+
+/* ---------- Lede / secondary text ---------- */
+
+.lede {
+  font-size: clamp(1.125rem, 2vw, 1.35rem);
+  line-height: 1.5;
+  color: var(--text-secondary);
+  max-width: var(--maxw-text);
+}
+
+.text-secondary { color: var(--text-secondary); }
+.text-muted { color: var(--text-muted); }
+
+/* ---------- Skip link / a11y ---------- */
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  background: var(--evergreen);
+  color: var(--cream);
+  padding: 0.75rem 1rem;
+  z-index: 100;
+}
+.skip-link:focus { left: 1rem; top: 1rem; border-bottom: 0; }
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+/* ---------- Utility ---------- */
+
+.muted-rule { border-top: 1px solid var(--border); }
+.center { text-align: center; }
+.mx-auto { margin-inline: auto; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}

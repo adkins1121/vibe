@@ -1,0 +1,32 @@
+---
+// Generic card surface. White/card-bg only — never the canvas.
+interface Props {
+  as?: string;
+  href?: string | null;
+  class?: string;
+}
+const { as = 'div', href = null, class: cls = '' } = Astro.props;
+const Tag = href ? 'a' : as;
+---
+<Tag class={`card ${href ? 'card--link' : ''} ${cls}`} {...(href ? { href } : {})}>
+  <slot />
+</Tag>
+
+<style>
+  .card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: clamp(1.5rem, 3vw, 2rem);
+    display: block;
+  }
+  .card--link {
+    color: inherit;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s ease, border-color 0.15s ease;
+  }
+  .card--link:hover {
+    background: var(--card-hover);
+    border-color: var(--accent-border);
+  }
+</style>

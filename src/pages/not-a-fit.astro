@@ -1,0 +1,76 @@
+---
+import Base from '../layouts/Base.astro';
+import { getCollection } from 'astro:content';
+
+const posts = (await getCollection('field-notes', ({ data }) => !data.draft))
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+---
+
+<Base
+  pageLabel="Not a fit"
+  description="Not what I do — here’s what I’d read instead. A warm off-ramp for companies outside my lane."
+>
+  <section class="page-head">
+    <div class="wrap-narrow">
+      <span class="eyebrow">Straight with you</span>
+      <h1>Not what I do — here’s what I’d read instead.</h1>
+      <p class="lede">
+        You landed here because something you told me says we’re not a match right now —
+        too early, too big, or the wrong motion. That’s not a brush-off. It’s the most
+        useful thing I can tell you, because pretending otherwise would waste your money
+        and my reputation.
+      </p>
+      <p>
+        I fix broken revenue engines for founder-led <strong>B2B</strong> companies
+        roughly <strong>$1–50M</strong>. Outside that band, the patterns I work from
+        don’t transfer cleanly, and you deserve someone whose patterns do. Here’s where
+        I’d point you instead, depending on where you are:
+      </p>
+
+      <ul class="nf-routes">
+        <li><strong>Pre-revenue or under $1M:</strong> your job is a repeatable first sale, not a revenue operator. Read founder-led-sales material and talk to people who specialize in zero-to-one.</li>
+        <li><strong>Over $50M:</strong> you need a VP you hire and own, not a fractional one. A retained search firm is the right call.</li>
+        <li><strong>B2C / consumer:</strong> your growth motion is genuinely different. Find an operator whose pattern library is built on consumer, not B2B.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="section-tight nf-reading">
+    <div class="wrap">
+      <span class="eyebrow eyebrow--muted">Worth your time regardless</span>
+      <h2>A few Field Notes that travel.</h2>
+      <ul class="nf-list">
+        {posts.map((post) => (
+          <li>
+            <a href={`/field-notes/${post.slug}`} class="nf-link">
+              <span class="nf-link__pillar">{post.data.pillar}</span>
+              <span class="nf-link__title">{post.data.title}</span>
+              <span class="nf-link__summary text-secondary">{post.data.summary}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .page-head { padding-top: clamp(3rem, 6vw, 5rem); }
+  .page-head h1 { max-width: 18ch; }
+  .nf-routes { list-style: none; padding: 0; margin: 1.5rem 0 0; }
+  .nf-routes li { padding: 1rem 0 1rem 1.6rem; border-top: 1px solid var(--border); position: relative; max-width: none; }
+  .nf-routes li::before { content: '→'; position: absolute; left: 0; color: var(--accent); font-weight: 700; }
+
+  .nf-reading { background: var(--card-bg); border-top: 1px solid var(--border); }
+  .nf-list { list-style: none; padding: 0; margin: 1.5rem 0 0; }
+  .nf-list li { border-top: 1px solid var(--border); }
+  .nf-link { display: block; padding: 1.3rem 0; color: inherit; border-bottom: 0; }
+  .nf-link:hover { border-bottom: 0; }
+  .nf-link:hover .nf-link__title { color: var(--accent); }
+  .nf-link__pillar {
+    font-family: var(--font-head); font-weight: 700; font-size: 0.72rem; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--accent); display: block; margin-bottom: 0.35rem;
+  }
+  .nf-link__title { font-family: var(--font-head); font-weight: 700; font-size: 1.15rem; display: block; margin-bottom: 0.3rem; max-width: none; }
+  .nf-link__summary { display: block; margin: 0; }
+</style>

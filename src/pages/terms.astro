@@ -1,0 +1,54 @@
+---
+import Base from '../layouts/Base.astro';
+const updated = 'June 2026';
+---
+
+<Base
+  pageLabel="Terms"
+  description="Terms of use for the Altus KC website."
+>
+  <section class="legal">
+    <div class="wrap-narrow">
+      <span class="eyebrow">Terms</span>
+      <h1>Terms of use</h1>
+      <p class="text-muted">Last updated {updated}.</p>
+
+      <h2>What this site is</h2>
+      <p>
+        This is the marketing site for Altus KC, a fractional revenue operating practice
+        run by Mike Adkins in Kansas City. Nothing here is a contract, a guarantee of
+        results, or professional advice for your specific situation. Engagements are
+        governed by the separate written agreement we sign before any work begins.
+      </p>
+
+      <h2>The Revenue Engine Check</h2>
+      <p>
+        The diagnostic is a self-assessment tool. Its scores and recommendations are
+        directional — a starting point for a conversation, not a substitute for a paid
+        diagnostic or for your own judgment. Decisions you make from it are your own.
+      </p>
+
+      <h2>Content</h2>
+      <p>
+        Field Notes and case patterns on this site are mine. Client examples are
+        anonymized unless a client has approved being named. You’re welcome to quote and
+        link with attribution; please don’t republish wholesale.
+      </p>
+
+      <h2>Contact</h2>
+      <p>
+        Questions about these terms: <a href="mailto:mike@altus-kc.com">mike@altus-kc.com</a>.
+      </p>
+
+      <p class="text-muted legal__note">
+        This is a prototype document for review. Final terms should be confirmed before launch.
+      </p>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .legal { padding-top: clamp(3rem, 6vw, 5rem); }
+  .legal h2 { font-size: 1.4rem; margin-top: 2.4rem; }
+  .legal__note { font-size: 0.85rem; margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+</style>

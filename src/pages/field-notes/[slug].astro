@@ -1,0 +1,70 @@
+---
+import Base from '../../layouts/Base.astro';
+import CTAButton from '../../components/CTAButton.astro';
+import { getCollection } from 'astro:content';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('field-notes', ({ data }) => !data.draft);
+  return posts.map((post) => ({ params: { slug: post.slug }, props: { post } }));
+}
+
+const { post } = Astro.props;
+const { Content } = await post.render();
+const fmt = (d) => d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+---
+
+<Base
+  title={`${post.data.title} — Altus KC · Field Notes`}
+  description={post.data.summary}
+>
+  <article class="post">
+    <header class="post__head">
+      <div class="wrap-narrow">
+        <a href="/field-notes" class="post__back">← Field Notes</a>
+        <span class="post__pillar">{post.data.pillar}</span>
+        <h1 class="post__title">{post.data.title}</h1>
+        <p class="post__meta text-muted">{fmt(post.data.date)}</p>
+      </div>
+    </header>
+
+    <div class="wrap-narrow post__body">
+      <Content />
+    </div>
+
+    <footer class="post__foot">
+      <div class="wrap-narrow center">
+        <h2>Score your own engine.</h2>
+        <p class="text-secondary mx-auto" style="margin-inline:auto;max-width:48ch;">
+          The Revenue Engine Check runs the same six-phase map on your business in three minutes.
+        </p>
+        <div style="margin-top:1.6rem;">
+          <CTAButton href="/tools/revenue-engine-check">Run the Revenue Engine Check</CTAButton>
+        </div>
+      </div>
+    </footer>
+  </article>
+</Base>
+
+<style>
+  .post__head { padding-top: clamp(2.5rem, 5vw, 4rem); padding-bottom: 1.5rem; }
+  .post__back { font-family: var(--font-head); font-weight: 600; font-size: 0.9rem; border-bottom: 0; }
+  .post__back:hover { border-bottom: 0; color: var(--accent); }
+  .post__pillar {
+    display: block; margin-top: 1.5rem;
+    font-family: var(--font-head); font-weight: 700; font-size: 0.78rem;
+    letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent);
+  }
+  .post__title { margin: 0.6rem 0 0.5rem; font-size: clamp(1.9rem, 4vw, 2.6rem); max-width: 22ch; }
+  .post__meta { font-size: 0.9rem; }
+
+  .post__body { padding-bottom: clamp(2.5rem, 5vw, 4rem); }
+  .post__body :global(h2) { font-size: 1.5rem; margin-top: 2.2rem; }
+  .post__body :global(h3) { font-size: 1.2rem; margin-top: 1.8rem; }
+  .post__body :global(p),
+  .post__body :global(li) { font-size: 1.075rem; line-height: 1.7; }
+  .post__body :global(ol),
+  .post__body :global(ul) { margin-bottom: 1.2em; }
+  .post__body :global(strong) { color: var(--evergreen); }
+
+  .post__foot { background: var(--card-bg); border-top: 1px solid var(--border); padding-block: clamp(2.5rem, 5vw, 4rem); }
+</style>

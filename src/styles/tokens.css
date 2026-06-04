@@ -1,0 +1,45 @@
+/* ============================================================
+   Altus KC — Design Tokens
+   Source: brand-assets.md (authoritative). Section 3 of build spec.
+   Hard rules: cream canvas everywhere; one accent moment per section;
+   no gradients except --accent-glow hero wash; no shadows/bevels;
+   sentence-case headings; ALL CAPS only for wordmark + eyebrow labels.
+   ============================================================ */
+
+:root {
+  /* Color */
+  --evergreen: #1A3C34;      /* primary text, dark surfaces */
+  --accent: #3D8C62;         /* CTAs, links — max 1–2 moments per layout */
+  --cream: #F6F3EE;          /* default background, never pure white */
+  --mid-green: #2B5C4E;
+  --near-black: #1A1A1A;
+  --white: #FDFCFA;          /* cards only */
+  --card-bg: #EDEAE4;
+  --card-hover: #E4E0D8;
+  --border: rgba(27, 46, 38, 0.10);
+  --accent-border: rgba(61, 140, 98, 0.20);
+  --accent-glow: rgba(61, 140, 98, 0.06);
+  --text-secondary: #5A6B60;
+  --text-muted: #8A9690;
+
+  /* Type */
+  --font-head: 'Montserrat', Arial, sans-serif;
+  --font-body: 'DM Sans', Arial, sans-serif;
+
+  /* Type scale (brand doc) */
+  --h1: clamp(2.5rem, 5vw, 4rem);      /* 48–64 */
+  --h2: clamp(2rem, 3.5vw, 2.5rem);    /* 32–40 */
+  --h3: 1.5rem;                         /* 24 */
+  --body: 1rem;                         /* 16 */
+  --small: 0.875rem;                    /* 14 */
+  --eyebrow: 0.875rem;                  /* 14, 0.08em tracking */
+
+  /* Shape */
+  --radius: 4px;             /* max — brand is square-leaning */
+
+  /* Rhythm */
+  --section-y: clamp(4rem, 9vw, 7.5rem);
+  --gutter: clamp(1.25rem, 5vw, 3rem);
+  --maxw: 1100px;
+  --maxw-text: 680px;
+}

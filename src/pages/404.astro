@@ -1,0 +1,31 @@
+---
+import Base from '../layouts/Base.astro';
+import CTAButton from '../components/CTAButton.astro';
+---
+
+<Base title="Not found — Altus KC" description="That page isn’t here.">
+  <section class="nf404">
+    <div class="wrap-narrow center">
+      <span class="eyebrow">404</span>
+      <h1>That page took a different exit.</h1>
+      <p class="lede mx-auto" style="margin-inline:auto;">
+        Broken link, old URL, or a typo — either way it’s not here. Here’s the fastest way
+        back to something useful.
+      </p>
+      <div class="nf404__ctas">
+        <CTAButton href="/tools/revenue-engine-check" size="lg">Run the Revenue Engine Check</CTAButton>
+        <CTAButton href="/" variant="ghost">Back to home</CTAButton>
+      </div>
+      <p class="nf404__links text-secondary">
+        Or jump to <a href="/how-i-work">How I work</a>, <a href="/proof">Proof</a>, or
+        <a href="/field-notes">Field Notes</a>.
+      </p>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .nf404 { padding-block: clamp(4rem, 10vw, 8rem); }
+  .nf404__ctas { margin-top: 2rem; display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+  .nf404__links { margin-top: 2rem; }
+</style>

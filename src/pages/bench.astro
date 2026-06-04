@@ -1,0 +1,172 @@
+---
+import Base from '../layouts/Base.astro';
+---
+
+<Base
+  pageLabel="Operator Bench"
+  description="A vetted, private bench of 1099 operators — RevOps, AI implementation, fractional sales leadership — available inside Altus engagements. No public roster, no job board."
+>
+  <!-- For clients -->
+  <section class="page-head">
+    <div class="wrap-narrow">
+      <span class="eyebrow">The Operator Bench</span>
+      <h1>A bench, not a job board.</h1>
+      <p class="lede">
+        Vetted 1099 operators — RevOps, AI implementation, fractional sales leadership —
+        available inside Altus engagements. No browsing, no roster to scroll, no
+        marketplace. You tell me what the engagement needs; I place the right operator.
+      </p>
+      <div class="bench-foryou">
+        <p class="bench-foryou__label">For clients</p>
+        <p>
+          The bench is a feature of working with Altus, not a service you shop. When an
+          engagement needs a specialist I don’t personally cover, I pull from a network
+          I’ve vetted myself — and the placement runs through me, so quality and fit stay
+          my problem, not yours.
+        </p>
+        <p class="text-secondary"><strong>Want someone for an active engagement?</strong> Just ask — <a href="mailto:mike@altus-kc.com">mike@altus-kc.com</a>.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- For operators -->
+  <section class="bench-apply">
+    <div class="wrap-narrow">
+      <span class="eyebrow eyebrow--muted">For operators</span>
+      <h2>Want on the bench?</h2>
+      <p>
+        If you’re a 1099 operator in RevOps, AI implementation, or fractional sales
+        leadership — and you do the work, not just advise on it — I want to know you
+        before I need you. No public profile, no bidding, no race to the bottom on rate.
+        When an engagement fits, I reach out.
+      </p>
+
+      <!-- Lands in HubSpot with bench_applicant tag (build spec §5). -->
+      <form class="bench-form" id="bench-form">
+        <div class="bench-form__grid">
+          <label class="field">
+            <span>Name</span>
+            <input type="text" name="full_name" required autocomplete="name" />
+          </label>
+          <label class="field">
+            <span>Email</span>
+            <input type="email" name="email" required autocomplete="email" />
+          </label>
+          <label class="field field--full">
+            <span>LinkedIn</span>
+            <input type="url" name="linkedin" placeholder="https://linkedin.com/in/…" required />
+          </label>
+          <label class="field">
+            <span>Specialty</span>
+            <select name="specialty" required>
+              <option value="" disabled selected>Choose one</option>
+              <option>RevOps</option>
+              <option>AI implementation</option>
+              <option>Fractional sales leadership</option>
+              <option>Other</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>Day rate band</span>
+            <select name="day_rate_band" required>
+              <option value="" disabled selected>Choose one</option>
+              <option>Under $750</option>
+              <option>$750–1,250</option>
+              <option>$1,250–2,000</option>
+              <option>$2,000+</option>
+            </select>
+          </label>
+          <label class="field field--full">
+            <span>Availability</span>
+            <select name="availability" required>
+              <option value="" disabled selected>Choose one</option>
+              <option>Open now</option>
+              <option>Within 30 days</option>
+              <option>Selectively / for the right fit</option>
+              <option>Booked, but keep me in mind</option>
+            </select>
+          </label>
+        </div>
+        <button type="submit" class="btn btn--solid btn--lg">Apply to the bench</button>
+        <p class="bench-form__done" id="bench-done" hidden>
+          Got it. If there’s a fit, you’ll hear from me directly — no automated funnel.
+        </p>
+      </form>
+      <p class="text-muted bench-note">
+        No public roster is ever published. Your details sit with me and surface only when
+        a client engagement needs your specialty. See <a href="/privacy">privacy</a>.
+      </p>
+    </div>
+  </section>
+</Base>
+
+<script>
+  const form = document.getElementById('bench-form');
+  const HUBSPOT_PORTAL_ID = import.meta.env.PUBLIC_HUBSPOT_PORTAL_ID || '';
+  const HUBSPOT_FORM_ID = import.meta.env.PUBLIC_HUBSPOT_BENCH_FORM_ID || '';
+
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const data = new FormData(form);
+    const fields = Array.from(data.entries()).map(([name, value]) => ({ name, value: String(value) }));
+    fields.push({ name: 'lifecyclestage', value: 'bench_applicant' }); // tag (§5)
+
+    if (HUBSPOT_PORTAL_ID && HUBSPOT_FORM_ID) {
+      try {
+        await fetch(
+          `https://api.hsforms.com/submissions/v3/integration/submit/${HUBSPOT_PORTAL_ID}/${HUBSPOT_FORM_ID}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ fields, context: { pageUri: location.href, pageName: 'Bench application' } }),
+          },
+        );
+      } catch (err) { console.warn('[bench] submit failed', err); }
+    } else {
+      console.info('[bench] HubSpot not configured — payload that would POST:', fields);
+    }
+
+    form.querySelector('.bench-form__grid').hidden = true;
+    form.querySelector('button[type="submit"]').hidden = true;
+    document.getElementById('bench-done').hidden = false;
+  });
+</script>
+
+<style>
+  .page-head { padding-top: clamp(3rem, 6vw, 5rem); }
+  .page-head h1 { max-width: 14ch; }
+  .bench-foryou {
+    margin-top: 2.2rem; padding: clamp(1.5rem, 4vw, 2.2rem);
+    border: 1px solid var(--border); border-left: 3px solid var(--accent);
+    border-radius: var(--radius); background: var(--white);
+  }
+  .bench-foryou__label {
+    font-family: var(--font-head); font-weight: 700; font-size: 0.75rem;
+    letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); margin-bottom: 0.8rem;
+  }
+  .bench-foryou p:last-child { margin-bottom: 0; }
+
+  .bench-apply { background: var(--card-bg); border-top: 1px solid var(--border); }
+  .bench-form { margin-top: 2rem; }
+  .bench-form__grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 1.1rem; margin-bottom: 1.6rem;
+  }
+  .field { display: flex; flex-direction: column; gap: 0.4rem; }
+  .field--full { grid-column: 1 / -1; }
+  .field span {
+    font-family: var(--font-head); font-weight: 600; font-size: 0.85rem; color: var(--evergreen);
+  }
+  .field input, .field select {
+    padding: 0.7rem 0.85rem; border: 1px solid var(--border); border-radius: var(--radius);
+    background: var(--white); font: inherit; color: var(--evergreen);
+  }
+  .field input:focus-visible, .field select:focus-visible {
+    outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent);
+  }
+  .bench-form__done { margin-top: 1.2rem; font-weight: 600; color: var(--evergreen); }
+  .bench-note { font-size: 0.85rem; margin-top: 1.4rem; }
+
+  @media (max-width: 560px) {
+    .bench-form__grid { grid-template-columns: 1fr; }
+  }
+</style>

@@ -1,0 +1,296 @@
+---
+import '../styles/tokens.css';
+import '../styles/global.css';
+import Wordmark from '../components/Wordmark.astro';
+
+interface Props {
+  title: string;
+  description?: string;
+  /** Page label used in the title pattern. If omitted, `title` is used raw. */
+  pageLabel?: string;
+  ogImage?: string;
+}
+
+const {
+  title,
+  description = 'A fractional operating partner who fixes broken revenue engines for founder-led B2B companies. Kansas City.',
+  pageLabel,
+  ogImage = '/og-default.svg',
+} = Astro.props;
+
+// Title pattern: {Page} — Altus KC · Fractional Revenue Operator, Kansas City
+const fullTitle = pageLabel
+  ? `${pageLabel} — Altus KC · Fractional Revenue Operator, Kansas City`
+  : title;
+
+const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://altus-kc.com').href;
+
+const nav = [
+  { href: '/how-i-work', label: 'How I work' },
+  { href: '/proof', label: 'Proof' },
+  { href: '/field-notes', label: 'Field Notes' },
+  { href: '/bench', label: 'Bench' },
+];
+
+const path = Astro.url.pathname.replace(/\/$/, '') || '/';
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={new URL(ogImage, Astro.site ?? 'https://altus-kc.com').href} />
+    <meta property="og:site_name" content="Altus KC" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <!-- Fonts: Montserrat 600/700/800 + DM Sans 400/500/600, display=swap -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Montserrat:wght@600;700;800&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <a href="#main" class="skip-link">Skip to content</a>
+
+    <header class="site-head">
+      <div class="wrap site-head__inner">
+        <Wordmark size="md" href="/" />
+        <nav class="site-nav" aria-label="Primary">
+          <button class="nav-toggle" aria-expanded="false" aria-controls="nav-list" aria-label="Toggle menu">
+            <span></span><span></span><span></span>
+          </button>
+          <ul id="nav-list" class="nav-list">
+            {nav.map((item) => (
+              <li>
+                <a
+                  href={item.href}
+                  class="nav-link"
+                  aria-current={path.startsWith(item.href) ? 'page' : undefined}
+                >
+                  {item.label}
+                </a>
+              </li>
+            ))}
+            <li>
+              <a href="/tools/revenue-engine-check" class="nav-cta">Revenue Engine Check</a>
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </header>
+
+    <main id="main">
+      <slot />
+    </main>
+
+    <footer class="site-foot">
+      <div class="wrap site-foot__inner">
+        <div class="site-foot__brand">
+          <Wordmark size="md" href={null} />
+          <p class="text-secondary site-foot__tag">
+            Fractional revenue operator for founder-led B2B companies. Built and run from Kansas City.
+          </p>
+          <a class="btn-link" href="/tools/revenue-engine-check">Run the Revenue Engine Check →</a>
+        </div>
+
+        <nav class="site-foot__cols" aria-label="Footer">
+          <div>
+            <p class="foot-head">Work</p>
+            <ul>
+              <li><a href="/how-i-work">How I work</a></li>
+              <li><a href="/proof">Proof</a></li>
+              <li><a href="/bench">Operator Bench</a></li>
+            </ul>
+          </div>
+          <div>
+            <p class="foot-head">Read</p>
+            <ul>
+              <li><a href="/field-notes">Field Notes</a></li>
+              <li><a href="/tools/revenue-engine-check">Revenue Engine Check</a></li>
+            </ul>
+          </div>
+          <div>
+            <p class="foot-head">Legal</p>
+            <ul>
+              <li><a href="/terms">Terms</a></li>
+              <li><a href="/privacy">Privacy</a></li>
+            </ul>
+          </div>
+        </nav>
+      </div>
+      <div class="wrap site-foot__base">
+        <span class="text-muted">© {new Date().getFullYear()} Altus KC · Mike Adkins</span>
+        <a href="mailto:mike@altus-kc.com" class="text-muted">mike@altus-kc.com</a>
+      </div>
+    </footer>
+
+    <script>
+      const toggle = document.querySelector('.nav-toggle');
+      const list = document.getElementById('nav-list');
+      toggle?.addEventListener('click', () => {
+        const open = toggle.getAttribute('aria-expanded') === 'true';
+        toggle.setAttribute('aria-expanded', String(!open));
+        list?.classList.toggle('nav-list--open', !open);
+      });
+    </script>
+
+    <style>
+      /* ---------- Header ---------- */
+      .site-head {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        background: color-mix(in srgb, var(--cream) 88%, transparent);
+        backdrop-filter: saturate(1.1) blur(8px);
+        border-bottom: 1px solid var(--border);
+      }
+      .site-head__inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-height: 68px;
+        gap: 1rem;
+      }
+      .nav-list {
+        list-style: none;
+        display: flex;
+        align-items: center;
+        gap: 1.6rem;
+        margin: 0;
+        padding: 0;
+      }
+      .nav-link {
+        font-family: var(--font-head);
+        font-weight: 600;
+        font-size: 0.95rem;
+        color: var(--evergreen);
+        border-bottom: 1px solid transparent;
+      }
+      .nav-link:hover,
+      .nav-link[aria-current='page'] { border-bottom-color: var(--accent); color: var(--accent); }
+      .nav-cta {
+        font-family: var(--font-head);
+        font-weight: 700;
+        font-size: 0.9rem;
+        color: var(--white);
+        background: var(--accent);
+        padding: 0.55rem 1rem;
+        border-radius: var(--radius);
+        border-bottom: 0;
+      }
+      .nav-cta:hover { background: var(--mid-green); border-bottom: 0; }
+      .nav-toggle { display: none; }
+
+      /* ---------- Footer ---------- */
+      .site-foot {
+        background: var(--evergreen);
+        color: var(--cream);
+        padding-top: clamp(3rem, 6vw, 4.5rem);
+        margin-top: var(--section-y);
+      }
+      .site-foot__inner {
+        display: grid;
+        grid-template-columns: 1.4fr 2fr;
+        gap: clamp(2rem, 5vw, 4rem);
+        padding-bottom: 3rem;
+      }
+      .site-foot :global(.wordmark),
+      .site-foot :global(.wordmark__altus) { color: var(--cream); }
+      .site-foot__tag { color: rgba(246, 243, 238, 0.7); margin: 1rem 0 1.2rem; max-width: 40ch; }
+      .btn-link {
+        font-family: var(--font-head);
+        font-weight: 700;
+        color: var(--accent);
+        border-bottom: 0;
+      }
+      .btn-link:hover { color: var(--cream); border-bottom: 0; }
+      .site-foot__cols {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.5rem;
+      }
+      .foot-head {
+        font-family: var(--font-head);
+        font-weight: 700;
+        font-size: 0.8rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: rgba(246, 243, 238, 0.5);
+        margin: 0 0 0.9rem;
+      }
+      .site-foot__cols ul { list-style: none; margin: 0; padding: 0; }
+      .site-foot__cols li { margin-bottom: 0.6rem; }
+      .site-foot__cols a { color: rgba(246, 243, 238, 0.85); border-bottom: 0; font-size: 0.95rem; }
+      .site-foot__cols a:hover { color: var(--accent); border-bottom: 0; }
+      .site-foot__base {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        padding-block: 1.4rem;
+        border-top: 1px solid rgba(246, 243, 238, 0.12);
+        font-size: 0.85rem;
+        flex-wrap: wrap;
+      }
+      .site-foot__base a { border-bottom: 0; }
+      .site-foot__base a:hover { color: var(--accent); }
+
+      /* ---------- Mobile ---------- */
+      @media (max-width: 760px) {
+        .nav-toggle {
+          display: inline-flex;
+          flex-direction: column;
+          justify-content: center;
+          gap: 4px;
+          width: 40px;
+          height: 40px;
+          background: transparent;
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
+          cursor: pointer;
+        }
+        .nav-toggle span {
+          display: block;
+          height: 2px;
+          width: 18px;
+          margin-inline: auto;
+          background: var(--evergreen);
+        }
+        .nav-list {
+          position: absolute;
+          top: 68px;
+          left: 0;
+          right: 0;
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 0;
+          background: var(--cream);
+          border-bottom: 1px solid var(--border);
+          padding: 0.5rem var(--gutter) 1.2rem;
+          display: none;
+        }
+        .nav-list--open { display: flex; }
+        .nav-list li { width: 100%; padding: 0.6rem 0; }
+        .nav-cta { display: inline-block; margin-top: 0.4rem; }
+        .site-foot__inner { grid-template-columns: 1fr; }
+        .site-foot__cols { grid-template-columns: repeat(3, 1fr); }
+      }
+      @media (max-width: 460px) {
+        .site-foot__cols { grid-template-columns: 1fr 1fr; }
+      }
+    </style>
+  </body>
+</html>
