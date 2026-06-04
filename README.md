@@ -76,9 +76,11 @@ browser POSTs to `/api/submit`, which fans out to two **server-side, best-effort
 
 Secrets never reach the client bundle. Capture is best-effort: on local static
 `npm run preview` (Functions don't run) the flow still works and logs the payload to the
-console. **See [`docs/capture-setup.md`](docs/capture-setup.md)** for setup. To exercise the
-Function locally, put the secrets in `.dev.vars` (gitignored) and run
-`npx wrangler pages dev ./dist` after a build.
+console. **See [`docs/capture-setup.md`](docs/capture-setup.md)** for setup.
+
+To exercise the Function locally (real Slack/HubSpot), copy `.dev.vars.example` to
+`.dev.vars`, fill in the secrets, and run `npm run dev:functions` (builds + serves via
+Wrangler with the Function live). `npm test` runs the scoring + capture test suites.
 
 Also pending from the spec's open-items list: confirm the six phase names against the
 paid diagnostic, the Cal.com booking link (placeholder in `how-i-work.astro`), client-name

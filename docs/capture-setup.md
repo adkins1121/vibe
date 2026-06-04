@@ -49,16 +49,15 @@ overwritten. Portal ID for reference: `244733039`.
   secret(s) and click **Encrypt**:
   - `SLACK_WEBHOOK_URL` (and optionally `SLACK_BENCH_WEBHOOK_URL`)
   - `HUBSPOT_PRIVATE_APP_TOKEN`
-- **Local testing** — put them in `.dev.vars` (gitignored):
+- **Local testing** — copy `.dev.vars.example` to `.dev.vars` (gitignored), fill in the
+  real values, then:
 
   ```
-  # .dev.vars
-  SLACK_WEBHOOK_URL=https://hooks.slack.com/services/T000/B000/xxxxxxxx
-  HUBSPOT_PRIVATE_APP_TOKEN=pat-na1-xxxxxxxx
+  npm run dev:functions     # astro build + wrangler pages dev, Function live
   ```
-  ```
-  npm run build && npx wrangler pages dev ./dist
-  ```
+
+  Wrangler auto-loads `.dev.vars`. Submit the Revenue Engine Check / bench form against the
+  local URL and watch `#gtm-signals` + the HubSpot contact.
 
 No build-time keys — `.env` only holds `PUBLIC_BOOKING_URL`. If neither secret is set the
 function returns 503 (logged), and the visitor still sees their report.

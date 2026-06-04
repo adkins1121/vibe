@@ -1,0 +1,9 @@
+# Local secrets for the Cloudflare Pages Function (functions/api/submit.js).
+# Copy to `.dev.vars` (gitignored) and fill in real values to test capture locally
+# with `npm run dev:functions`. In production these are set as encrypted env vars
+# in Cloudflare Pages → Settings → Environment variables.
+
+SLACK_WEBHOOK_URL=https://hooks.slack.com/services/XXX/YYY/ZZZ
+# Optional — route bench applications to a separate channel:
+# SLACK_BENCH_WEBHOOK_URL=https://hooks.slack.com/services/XXX/YYY/ZZZ
+HUBSPOT_PRIVATE_APP_TOKEN=pat-na2-xxxxxxxx

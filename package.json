@@ -8,10 +8,16 @@
     "start": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "test": "node test/score.test.mjs && node test/submit.test.mjs",
+    "dev:functions": "astro build && wrangler pages dev",
+    "deploy": "astro build && wrangler pages deploy"
   },
   "dependencies": {
     "@astrojs/sitemap": "3.2.1",
     "astro": "^4.16.18"
+  },
+  "devDependencies": {
+    "wrangler": "^4.98.0"
   }
 }
