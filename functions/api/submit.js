@@ -1,22 +1,26 @@
 // Cloudflare Pages Function — lead capture for Altus KC.
 // Runs at the edge. Receives a JSON POST from the Revenue Engine Check results
-// page and the Bench application form, and posts a formatted notification to a
-// Slack channel via an Incoming Webhook (URL kept as a Cloudflare secret,
-// SLACK_WEBHOOK_URL — never shipped to the browser).
+// page and the Bench application form, then fans out to two best-effort sinks:
 //
-// HubSpot capture is stubbed for now (requires a plan upgrade) — see the clearly
-// marked block at the bottom to re-enable it alongside, or instead of, Slack.
+//   1. Slack  — formatted Block Kit notification via an Incoming Webhook
+//               (SLACK_WEBHOOK_URL secret). Real-time alert.
+//   2. HubSpot — upserts the contact by email and APPENDS this submission as a
+//               JSON entry to the standard `hs_content_membership_notes` property
+//               (HUBSPOT_PRIVATE_APP_TOKEN secret). Historical record, no custom
+//               properties required (works on the current plan).
+//
+// Both are optional: whichever secret is set runs. Capture is best-effort — a
+// downstream failure is logged server-side and never blocks the visitor.
 //
 // Setup: docs/capture-setup.md
 
-// Optional separate channel for bench applications; falls back to the main hook.
-function webhookFor(kind, env) {
+// Optional separate Slack channel for bench applications; falls back to the main hook.
+function slackHookFor(kind, env) {
   if (kind === 'bench' && env.SLACK_BENCH_WEBHOOK_URL) return env.SLACK_BENCH_WEBHOOK_URL;
   return env.SLACK_WEBHOOK_URL;
 }
 
-// Allowlists — only these keys are ever read off the request, per kind. Anything
-// else in the body is ignored.
+// Allowlists — only these keys are ever read off the request, per kind.
 const ALLOWED = {
   rec: [
     'rec_p1', 'rec_p2', 'rec_p3', 'rec_p4', 'rec_p5', 'rec_p6',
@@ -24,6 +28,10 @@ const ALLOWED = {
   ],
   bench: ['full_name', 'linkedin', 'specialty', 'day_rate_band', 'availability'],
 };
+
+const HS_CONTACTS = 'https://api.hubapi.com/crm/v3/objects/contacts';
+const HS_NOTES_PROP = 'hs_content_membership_notes';
+const HISTORY_CAP = 50; // keep the most recent N submissions per contact
 
 const REVENUE_BAND_LABEL = {
   pre: 'Pre-revenue / <$1M', '1-2': '$1–2M', '2-10': '$2–10M',
@@ -53,19 +61,39 @@ export async function onRequestPost(context) {
   if (!isEmail(email)) return json({ ok: false, error: 'bad_email' }, 400);
 
   // Pull only allowlisted fields.
-  const data = { email: email.trim() };
+  const data = { email: email.trim().toLowerCase() };
   for (const key of ALLOWED[kind]) {
     if (payload[key] != null && payload[key] !== '') data[key] = String(payload[key]);
   }
 
-  const webhook = webhookFor(kind, env);
-  if (!webhook) {
-    console.error('[submit] SLACK_WEBHOOK_URL not set');
+  const slackHook = slackHookFor(kind, env);
+  const hsToken = env.HUBSPOT_PRIVATE_APP_TOKEN;
+  if (!slackHook && !hsToken) {
+    console.error('[submit] no sink configured (SLACK_WEBHOOK_URL / HUBSPOT_PRIVATE_APP_TOKEN)');
     return json({ ok: false, error: 'not_configured' }, 503);
   }
 
-  const message = kind === 'rec' ? recMessage(data) : benchMessage(data);
+  // Fan out — independent and best-effort.
+  const results = {};
+  const tasks = [];
+  if (slackHook) {
+    const message = kind === 'rec' ? recMessage(data) : benchMessage(data);
+    tasks.push(postSlack(slackHook, message).then((r) => (results.slack = r)));
+  }
+  if (hsToken) {
+    const entry = { ts: new Date().toISOString(), kind, ...data };
+    tasks.push(upsertHubSpot(hsToken, data.email, entry).then((r) => (results.hubspot = r)));
+  }
+  await Promise.all(tasks);
 
+  // 200 as long as the request was well-formed; per-sink status is in the body
+  // and any failure is logged server-side. Retrying client-side wouldn't help.
+  return json({ ok: true, results });
+}
+
+// ---- Slack ----------------------------------------------------------------
+
+async function postSlack(webhook, message) {
   try {
     const res = await fetch(webhook, {
       method: 'POST',
@@ -73,20 +101,14 @@ export async function onRequestPost(context) {
       body: JSON.stringify(message),
     });
     if (!res.ok) {
-      const detail = await res.text();
-      console.error('[submit] Slack error', res.status, detail);
-      return json({ ok: false, error: 'slack_error', status: res.status }, 502);
+      console.error('[submit] Slack error', res.status, await res.text());
+      return 'error';
     }
-    return json({ ok: true });
+    return 'ok';
   } catch (err) {
-    console.error('[submit] webhook fetch failed', err);
-    return json({ ok: false, error: 'upstream_unreachable' }, 502);
+    console.error('[submit] Slack fetch failed', err);
+    return 'unreachable';
   }
-
-  // --- HubSpot capture: STUBBED (re-enable when the plan supports it) ----------
-  // await upsertHubSpotContact(env.HUBSPOT_PRIVATE_APP_TOKEN, kind, data);
-  // (Implementation kept in git history — commit prior to the Slack switch.)
-  // -----------------------------------------------------------------------------
 }
 
 export function recMessage(d) {
@@ -98,7 +120,7 @@ export function recMessage(d) {
   const text = `New Revenue Engine Check — ${d.rec_grade || ''} (${d.rec_overall || '?'}/36), route ${d.rec_route || '?'}`;
 
   return {
-    text, // fallback / notification text
+    text,
     blocks: [
       { type: 'header', text: { type: 'plain_text', text: '🔧 New Revenue Engine Check', emoji: true } },
       {
@@ -136,6 +158,68 @@ export function benchMessage(d) {
       { type: 'context', elements: [{ type: 'mrkdwn', text: `LinkedIn  ${linkedin}` }] },
     ],
   };
+}
+
+// ---- HubSpot --------------------------------------------------------------
+// Upsert contact by email; append `entry` to the JSON array stored in
+// hs_content_membership_notes. No custom properties required.
+
+async function upsertHubSpot(token, email, entry) {
+  const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
+  try {
+    // Try to create with a fresh one-entry history.
+    let res = await fetch(HS_CONTACTS, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ properties: { email, [HS_NOTES_PROP]: serializeHistory([entry]) } }),
+    });
+
+    if (res.status === 409) {
+      const err = await res.json().catch(() => ({}));
+      const id = String(err.message || '').match(/Existing ID:\s*(\d+)/)?.[1];
+      if (!id) {
+        console.error('[submit] HubSpot 409 without ID', err);
+        return 'error';
+      }
+      // Read existing notes, append, write back.
+      const getRes = await fetch(`${HS_CONTACTS}/${id}?properties=${HS_NOTES_PROP}`, { headers });
+      const existing = getRes.ok
+        ? parseHistory((await getRes.json())?.properties?.[HS_NOTES_PROP])
+        : [];
+      existing.push(entry);
+      res = await fetch(`${HS_CONTACTS}/${id}`, {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify({ properties: { [HS_NOTES_PROP]: serializeHistory(existing) } }),
+      });
+    }
+
+    if (!res.ok) {
+      console.error('[submit] HubSpot error', res.status, await res.text());
+      return 'error';
+    }
+    return 'ok';
+  } catch (err) {
+    console.error('[submit] HubSpot fetch failed', err);
+    return 'unreachable';
+  }
+}
+
+// Parse the stored notes into an array of entries. If it isn't our JSON array
+// (e.g. someone typed a manual note), preserve that text as the first entry so
+// nothing is lost.
+export function parseHistory(value) {
+  if (!value) return [];
+  try {
+    const parsed = JSON.parse(value);
+    if (Array.isArray(parsed)) return parsed;
+  } catch { /* fall through */ }
+  return [{ ts: null, note: String(value) }];
+}
+
+export function serializeHistory(entries) {
+  const trimmed = entries.slice(-HISTORY_CAP); // keep most recent N
+  return JSON.stringify(trimmed);
 }
 
 // Anything other than POST.

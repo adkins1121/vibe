@@ -1,7 +1,7 @@
 // Verifies the Slack message builders in functions/api/submit.js produce
 // well-formed Slack payloads (valid JSON, required block structure, escaping).
 // Run: node test/submit.test.mjs
-import { recMessage, benchMessage } from '../functions/api/submit.js';
+import { recMessage, benchMessage, parseHistory, serializeHistory } from '../functions/api/submit.js';
 
 let failed = 0;
 const ok = (name, cond) => {
@@ -47,6 +47,29 @@ const ok = (name, cond) => {
 {
   const m = recMessage({ email: 'x@y.co', rec_grade: '<script>', rec_overall: '0', rec_route: 'DIAGNOSTIC', revenue_band: 'pre' });
   ok('rec: escapes angle brackets', JSON.stringify(m).includes('&lt;script&gt;'));
+}
+
+// --- HubSpot notes history (append / preserve) ---
+{
+  ok('history: empty value → []', JSON.stringify(parseHistory('')) === '[]');
+  ok('history: null value → []', JSON.stringify(parseHistory(null)) === '[]');
+
+  const arr = parseHistory('[{"kind":"rec","rec_overall":"18"}]');
+  ok('history: parses JSON array', Array.isArray(arr) && arr.length === 1);
+
+  // A manual note that isn't our JSON is preserved as an entry, not lost.
+  const preserved = parseHistory('called him on Tuesday');
+  ok('history: preserves manual note', preserved.length === 1 && preserved[0].note === 'called him on Tuesday');
+
+  // Append then round-trip.
+  const entry = { ts: '2026-06-04T00:00:00Z', kind: 'rec', email: 'a@b.co', rec_overall: '20' };
+  const next = parseHistory(serializeHistory([...arr, entry]));
+  ok('history: append round-trips', next.length === 2 && next[1].rec_overall === '20');
+
+  // Caps at 50 most-recent.
+  const many = Array.from({ length: 60 }, (_, i) => ({ i }));
+  const capped = parseHistory(serializeHistory(many));
+  ok('history: caps at 50', capped.length === 50 && capped[0].i === 10 && capped[49].i === 59);
 }
 
 console.log(failed === 0 ? '\nALL PASS' : `\n${failed} FAILED`);

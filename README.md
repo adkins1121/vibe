@@ -66,18 +66,19 @@ PUBLIC_BOOKING_URL=...   # Cal.com / Calendly discovery-call link
 ```
 
 **Lead capture** runs through a Cloudflare Pages Function (`functions/api/submit.js`) — the
-browser POSTs to `/api/submit`, which posts a formatted notification to a **Slack channel**
-via an Incoming Webhook. The webhook URL is a **server-side Cloudflare secret**
-(`SLACK_WEBHOOK_URL`) — never in the bundle, no API tokens, no plan upgrade. Capture is
-best-effort: on local static `npm run preview` (Functions don't run) the flow still works
-and logs the payload to the console.
+browser POSTs to `/api/submit`, which fans out to two **server-side, best-effort** sinks
+(each optional, configured by secret):
 
-Setup is one step: create a Slack Incoming Webhook and set the secret.
-**See [`docs/capture-setup.md`](docs/capture-setup.md)**. To exercise the Function locally,
-put the URL in `.dev.vars` (gitignored) and run `npx wrangler pages dev ./dist` after a build.
+- **Slack** (`SLACK_WEBHOOK_URL`) — formatted Block Kit notification to a channel.
+- **HubSpot** (`HUBSPOT_PRIVATE_APP_TOKEN`) — upserts the contact by email and **appends**
+  each submission as a JSON entry to the standard `hs_content_membership_notes` property
+  (most recent 50 kept). No custom properties, so it works on the current plan.
 
-> **HubSpot is stubbed** for now (needs a plan upgrade for custom properties). The re-enable
-> hook is marked in the Function; the full CRM implementation is in git history.
+Secrets never reach the client bundle. Capture is best-effort: on local static
+`npm run preview` (Functions don't run) the flow still works and logs the payload to the
+console. **See [`docs/capture-setup.md`](docs/capture-setup.md)** for setup. To exercise the
+Function locally, put the secrets in `.dev.vars` (gitignored) and run
+`npx wrangler pages dev ./dist` after a build.
 
 Also pending from the spec's open-items list: confirm the six phase names against the
 paid diagnostic, the Cal.com booking link (placeholder in `how-i-work.astro`), client-name
