@@ -6,4 +6,6 @@
 SLACK_WEBHOOK_URL=https://hooks.slack.com/services/XXX/YYY/ZZZ
 # Optional — route bench applications to a separate channel:
 # SLACK_BENCH_WEBHOOK_URL=https://hooks.slack.com/services/XXX/YYY/ZZZ
+# Optional — route digital-card contact swaps to a separate channel:
+# SLACK_CARD_WEBHOOK_URL=https://hooks.slack.com/services/XXX/YYY/ZZZ
 HUBSPOT_PRIVATE_APP_TOKEN=pat-na2-xxxxxxxx

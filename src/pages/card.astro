@@ -1,0 +1,356 @@
+---
+import Base from '../layouts/Base.astro';
+
+// Digital business card — built to share in person (networking, conferences).
+// Tap-friendly actions, a one-tap "save my contact" vCard, a QR/Web-Share row
+// so anyone can pull it up on their own phone, and a reciprocal "send me yours"
+// form that lands in the same capture pipeline as the rest of the site.
+
+const BOOKING_URL = import.meta.env.PUBLIC_BOOKING_URL || 'https://tidycal.com/madkins/60-min-mike-adkins';
+const LINKEDIN_URL = import.meta.env.PUBLIC_LINKEDIN_URL || '';
+
+// Authoritative profile — also the source for the downloadable vCard below.
+const profile = {
+  firstName: 'Mike',
+  lastName: 'Adkins',
+  name: 'Mike Adkins',
+  org: 'Altus KC',
+  title: 'Fractional Revenue Operator',
+  location: 'Kansas City',
+  email: 'mike@altus-kc.com',
+  phone: '', // optional — fill in to include a tel: link + vCard number
+  site: 'https://altus-kc.com',
+  booking: BOOKING_URL,
+  linkedin: LINKEDIN_URL,
+  tagline: 'I fix broken revenue engines for founder-led B2B companies. Operator, not advisor.',
+};
+
+// Absolute URL to this card — what the QR code and share button point at.
+const cardUrl = new URL('/card', Astro.site ?? 'https://altus-kc.com').href;
+const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=320x320&margin=8&data=${encodeURIComponent(cardUrl)}`;
+const initials = `${profile.firstName[0]}${profile.lastName[0]}`;
+---
+
+<Base
+  pageLabel="Mike Adkins · Digital card"
+  description="Mike Adkins — fractional revenue operator, Altus KC, Kansas City. Save my contact, book a call, or swap details."
+>
+  <section class="card-page">
+    <div class="wrap-narrow">
+      <!-- The card -->
+      <article class="vcard" data-profile={JSON.stringify(profile)}>
+        <div class="vcard__top">
+          <span class="vcard__avatar" aria-hidden="true">{initials}</span>
+          <div class="vcard__id">
+            <h1 class="vcard__name">{profile.name}</h1>
+            <p class="vcard__role">{profile.title}</p>
+            <p class="vcard__org">
+              <span class="vcard__org-name">{profile.org}</span>
+              <span class="vcard__dot" aria-hidden="true">·</span>
+              <span class="text-secondary">{profile.location}</span>
+            </p>
+          </div>
+        </div>
+
+        <p class="vcard__tagline">{profile.tagline}</p>
+
+        <!-- Primary action: one tap to save to phone contacts -->
+        <button type="button" class="btn btn--solid btn--lg vcard__save" id="save-contact">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+          Save my contact
+        </button>
+
+        <!-- Secondary actions -->
+        <div class="vcard__links">
+          <a class="vcard__link" href={`mailto:${profile.email}`}>
+            <span class="vcard__link-label">Email</span>
+            <span class="vcard__link-value">{profile.email}</span>
+          </a>
+          <a class="vcard__link" href={profile.booking} target="_blank" rel="noopener">
+            <span class="vcard__link-label">Book a call</span>
+            <span class="vcard__link-value">30-min discovery call →</span>
+          </a>
+          <a class="vcard__link" href={profile.site} target="_blank" rel="noopener">
+            <span class="vcard__link-label">Website</span>
+            <span class="vcard__link-value">altus-kc.com →</span>
+          </a>
+          {profile.linkedin && (
+            <a class="vcard__link" href={profile.linkedin} target="_blank" rel="noopener">
+              <span class="vcard__link-label">LinkedIn</span>
+              <span class="vcard__link-value">Connect →</span>
+            </a>
+          )}
+        </div>
+
+        <!-- Share row -->
+        <div class="vcard__share">
+          <button type="button" class="btn btn--ghost btn--md" id="share-card">Share this card</button>
+          <button type="button" class="btn btn--ghost btn--md" id="show-qr" aria-expanded="false" aria-controls="qr-panel">Show QR code</button>
+        </div>
+
+        <div class="qr" id="qr-panel" hidden>
+          <img class="qr__img" src={qrSrc} width="180" height="180" alt={`QR code linking to ${cardUrl}`} loading="lazy" />
+          <p class="qr__hint text-secondary">Point a phone camera here to open this card.</p>
+        </div>
+      </article>
+
+      <!-- Reciprocal capture -->
+      <article class="swap">
+        <span class="eyebrow">Let's stay in touch</span>
+        <h2 class="swap__head">Send me your details</h2>
+        <p class="text-secondary swap__sub">
+          Drop your info and I’ll follow up after the event — no list, no automated drip.
+        </p>
+
+        <form class="swap-form" id="swap-form">
+          <div class="swap-form__grid">
+            <label class="field">
+              <span>Name</span>
+              <input type="text" name="full_name" required autocomplete="name" />
+            </label>
+            <label class="field">
+              <span>Email</span>
+              <input type="email" name="email" required autocomplete="email" inputmode="email" />
+            </label>
+            <label class="field">
+              <span>Company</span>
+              <input type="text" name="company" autocomplete="organization" />
+            </label>
+            <label class="field">
+              <span>Role</span>
+              <input type="text" name="role" autocomplete="organization-title" />
+            </label>
+            <label class="field">
+              <span>Phone <em class="opt">optional</em></span>
+              <input type="tel" name="phone" autocomplete="tel" inputmode="tel" />
+            </label>
+            <label class="field">
+              <span>Where we met <em class="opt">optional</em></span>
+              <input type="text" name="met_at" />
+            </label>
+            <label class="field field--full">
+              <span>Anything I should know? <em class="opt">optional</em></span>
+              <textarea name="note" rows="2"></textarea>
+            </label>
+          </div>
+          <button type="submit" class="btn btn--solid btn--lg">Send it over</button>
+          <p class="swap-form__error" id="swap-error" role="alert" hidden>
+            Hmm — that didn’t send. Email me directly: <a href={`mailto:${profile.email}`}>{profile.email}</a>.
+          </p>
+        </form>
+
+        <div class="swap__done" id="swap-done" hidden>
+          <h2>Got it — thanks.</h2>
+          <p class="text-secondary">I’ll be in touch. In the meantime, here’s mine to save:</p>
+          <button type="button" class="btn btn--ghost btn--md" id="save-contact-2">Save my contact</button>
+        </div>
+      </article>
+    </div>
+  </section>
+</Base>
+
+<script>
+  // --- vCard download: build a .vcf from the card's profile and save it. ---
+  const cardEl = document.querySelector('.vcard');
+  const profile = cardEl ? JSON.parse(cardEl.getAttribute('data-profile') || '{}') : {};
+
+  function esc(v) {
+    return String(v ?? '').replace(/\\/g, '\\\\').replace(/\n/g, '\\n').replace(/[,;]/g, (m) => '\\' + m);
+  }
+
+  function buildVCard(p) {
+    const lines = [
+      'BEGIN:VCARD',
+      'VERSION:3.0',
+      `N:${esc(p.lastName)};${esc(p.firstName)};;;`,
+      `FN:${esc(p.name)}`,
+      `ORG:${esc(p.org)}`,
+      `TITLE:${esc(p.title)}`,
+      `EMAIL;TYPE=WORK:${esc(p.email)}`,
+      p.phone ? `TEL;TYPE=CELL:${esc(p.phone)}` : '',
+      `URL:${esc(p.site)}`,
+      p.linkedin ? `X-SOCIALPROFILE;TYPE=linkedin:${esc(p.linkedin)}` : '',
+      p.location ? `ADR;TYPE=WORK:;;;${esc(p.location)};;;` : '',
+      `NOTE:${esc(p.tagline)}`,
+      `REV:${new Date().toISOString()}`,
+      'END:VCARD',
+    ].filter(Boolean);
+    return lines.join('\r\n');
+  }
+
+  function downloadContact() {
+    const blob = new Blob([buildVCard(profile)], { type: 'text/vcard;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'Mike-Adkins-Altus-KC.vcf';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  document.getElementById('save-contact')?.addEventListener('click', downloadContact);
+  document.getElementById('save-contact-2')?.addEventListener('click', downloadContact);
+
+  // --- Share: native share sheet where available, clipboard fallback. ---
+  const cardUrl = new URL('/card', location.origin).href;
+  document.getElementById('share-card')?.addEventListener('click', async (e) => {
+    const btn = e.currentTarget;
+    const shareData = { title: 'Mike Adkins — Altus KC', text: 'Mike Adkins · Fractional Revenue Operator, Altus KC', url: cardUrl };
+    if (navigator.share) {
+      try { await navigator.share(shareData); return; } catch { /* cancelled — fall through */ }
+    }
+    try {
+      await navigator.clipboard.writeText(cardUrl);
+      const label = btn.textContent;
+      btn.textContent = 'Link copied ✓';
+      setTimeout(() => { btn.textContent = label; }, 1800);
+    } catch {
+      window.prompt('Copy this link:', cardUrl);
+    }
+  });
+
+  // --- QR toggle ---
+  const qrBtn = document.getElementById('show-qr');
+  const qrPanel = document.getElementById('qr-panel');
+  qrBtn?.addEventListener('click', () => {
+    const open = qrPanel.hasAttribute('hidden') === false;
+    if (open) { qrPanel.setAttribute('hidden', ''); qrBtn.setAttribute('aria-expanded', 'false'); qrBtn.textContent = 'Show QR code'; }
+    else { qrPanel.removeAttribute('hidden'); qrBtn.setAttribute('aria-expanded', 'true'); qrBtn.textContent = 'Hide QR code'; }
+  });
+
+  // --- Contact-swap form → /api/submit (kind: card) ---
+  const form = document.getElementById('swap-form');
+  const errEl = document.getElementById('swap-error');
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    errEl.hidden = true;
+    const submitBtn = form.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    const data = Object.fromEntries(new FormData(form).entries());
+    const body = { kind: 'card', ...data };
+
+    let ok = false;
+    try {
+      const res = await fetch('/api/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      ok = res.ok;
+      if (!ok) console.warn('[card] capture not OK', res.status);
+    } catch (err) {
+      // On a static preview the Function isn't running — don't block the person.
+      console.info('[card] capture endpoint unavailable (expected on static preview)', body);
+      ok = true;
+    }
+
+    if (ok) {
+      form.hidden = true;
+      document.getElementById('swap-done').hidden = false;
+    } else {
+      errEl.hidden = false;
+      submitBtn.disabled = false;
+    }
+  });
+</script>
+
+<style>
+  .card-page { padding-top: clamp(2rem, 5vw, 3.5rem); }
+
+  /* ---------- The card ---------- */
+  .vcard {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-top: 3px solid var(--accent);
+    border-radius: var(--radius);
+    padding: clamp(1.5rem, 5vw, 2.4rem);
+  }
+  .vcard__top { display: flex; align-items: center; gap: 1.1rem; }
+  .vcard__avatar {
+    flex: none;
+    width: 64px; height: 64px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: var(--evergreen); color: var(--cream);
+    font-family: var(--font-head); font-weight: 800; font-size: 1.4rem;
+    letter-spacing: 0.04em; border-radius: var(--radius);
+  }
+  .vcard__name { font-size: clamp(1.6rem, 5vw, 2.1rem); margin: 0; }
+  .vcard__role { font-family: var(--font-head); font-weight: 600; color: var(--accent); margin: 0.15rem 0 0; }
+  .vcard__org { margin: 0.3rem 0 0; display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: baseline; }
+  .vcard__org-name { font-family: var(--font-head); font-weight: 700; color: var(--evergreen); }
+  .vcard__dot { color: var(--text-muted); }
+
+  .vcard__tagline {
+    margin: 1.3rem 0 1.5rem;
+    font-size: 1.05rem; line-height: 1.5; color: var(--text-secondary);
+  }
+
+  .vcard__save { width: 100%; }
+
+  .vcard__links {
+    margin-top: 1rem;
+    display: grid; gap: 0.5rem;
+  }
+  .vcard__link {
+    display: flex; justify-content: space-between; align-items: baseline; gap: 1rem;
+    padding: 0.8rem 1rem;
+    border: 1px solid var(--border); border-radius: var(--radius);
+    background: var(--cream); color: var(--evergreen);
+  }
+  .vcard__link:hover { border-color: var(--accent); border-bottom-color: var(--accent); }
+  .vcard__link-label {
+    font-family: var(--font-head); font-weight: 700; font-size: 0.78rem;
+    letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted);
+  }
+  .vcard__link-value { font-weight: 600; text-align: right; }
+
+  .vcard__share { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 1.2rem; }
+
+  .qr {
+    margin-top: 1.2rem; padding-top: 1.2rem; border-top: 1px solid var(--border);
+    text-align: center;
+  }
+  .qr__img {
+    width: 180px; height: 180px; image-rendering: pixelated;
+    background: var(--white); padding: 0.5rem; border: 1px solid var(--border); border-radius: var(--radius);
+  }
+  .qr__hint { font-size: 0.85rem; margin: 0.7rem 0 0; }
+
+  /* ---------- Swap form ---------- */
+  .swap { margin-top: clamp(2rem, 6vw, 3rem); }
+  .swap__head { margin: 0; }
+  .swap__sub { margin-top: 0.4rem; }
+  .swap-form { margin-top: 1.4rem; }
+  .swap-form__grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.4rem;
+  }
+  .field { display: flex; flex-direction: column; gap: 0.4rem; }
+  .field--full { grid-column: 1 / -1; }
+  .field span {
+    font-family: var(--font-head); font-weight: 600; font-size: 0.85rem; color: var(--evergreen);
+  }
+  .field .opt {
+    font-family: var(--font-body); font-style: normal; font-weight: 400;
+    font-size: 0.78rem; color: var(--text-muted); margin-left: 0.35rem;
+  }
+  .field input, .field textarea {
+    padding: 0.7rem 0.85rem; border: 1px solid var(--border); border-radius: var(--radius);
+    background: var(--white); font: inherit; color: var(--evergreen); resize: vertical;
+  }
+  .field input:focus-visible, .field textarea:focus-visible {
+    outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent);
+  }
+  .swap-form__error { margin-top: 1rem; color: var(--evergreen); font-weight: 600; }
+  .swap__done { padding: 1.4rem 0; }
+  .swap__done h2 { margin-bottom: 0.3rem; }
+
+  @media (max-width: 560px) {
+    .swap-form__grid { grid-template-columns: 1fr; }
+    .vcard__link-value { font-size: 0.95rem; }
+  }
+</style>

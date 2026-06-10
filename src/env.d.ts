@@ -3,6 +3,8 @@
 interface ImportMetaEnv {
   /** Cal.com / Calendly booking URL for the discovery call (build-time, public) */
   readonly PUBLIC_BOOKING_URL: string;
+  /** LinkedIn profile URL shown on the digital card (build-time, public; optional) */
+  readonly PUBLIC_LINKEDIN_URL?: string;
 }
 
 interface ImportMeta {
