@@ -14,9 +14,10 @@
 //
 // Setup: docs/capture-setup.md
 
-// Optional separate Slack channel for bench applications; falls back to the main hook.
+// Optional separate Slack channels per kind; each falls back to the main hook.
 function slackHookFor(kind, env) {
   if (kind === 'bench' && env.SLACK_BENCH_WEBHOOK_URL) return env.SLACK_BENCH_WEBHOOK_URL;
+  if (kind === 'card' && env.SLACK_CARD_WEBHOOK_URL) return env.SLACK_CARD_WEBHOOK_URL;
   return env.SLACK_WEBHOOK_URL;
 }
 
@@ -27,6 +28,8 @@ const ALLOWED = {
     'rec_overall', 'rec_grade', 'rec_route', 'revenue_band', 'edge_band', 'weakest',
   ],
   bench: ['full_name', 'linkedin', 'specialty', 'day_rate_band', 'availability'],
+  // Contact swapped from the digital business card (/card).
+  card: ['full_name', 'company', 'role', 'phone', 'linkedin', 'note', 'met_at'],
 };
 
 const HS_CONTACTS = 'https://api.hubapi.com/crm/v3/objects/contacts';
@@ -57,7 +60,7 @@ export async function onRequestPost(context) {
   }
 
   const { kind, email } = payload || {};
-  if (kind !== 'rec' && kind !== 'bench') return json({ ok: false, error: 'bad_kind' }, 400);
+  if (kind !== 'rec' && kind !== 'bench' && kind !== 'card') return json({ ok: false, error: 'bad_kind' }, 400);
   if (!isEmail(email)) return json({ ok: false, error: 'bad_email' }, 400);
 
   // Pull only allowlisted fields.
@@ -77,7 +80,8 @@ export async function onRequestPost(context) {
   const results = {};
   const tasks = [];
   if (slackHook) {
-    const message = kind === 'rec' ? recMessage(data) : benchMessage(data);
+    const message =
+      kind === 'rec' ? recMessage(data) : kind === 'bench' ? benchMessage(data) : cardMessage(data);
     tasks.push(postSlack(slackHook, message).then((r) => (results.slack = r)));
   }
   if (hsToken) {
@@ -158,6 +162,29 @@ export function benchMessage(d) {
       { type: 'context', elements: [{ type: 'mrkdwn', text: `LinkedIn  ${linkedin}` }] },
     ],
   };
+}
+
+export function cardMessage(d) {
+  const who = d.full_name || d.email;
+  const text = `New contact swapped — ${who}${d.company ? ` (${d.company})` : ''}`;
+  const linkedin = d.linkedin ? `<${esc(d.linkedin)}|${esc(d.linkedin)}>` : '—';
+  const blocks = [
+    { type: 'header', text: { type: 'plain_text', text: '🤝 New contact — from your card', emoji: true } },
+    {
+      type: 'section',
+      fields: [
+        { type: 'mrkdwn', text: `*Name:*\n${esc(d.full_name) || '—'}` },
+        { type: 'mrkdwn', text: `*Email:*\n${esc(d.email)}` },
+        { type: 'mrkdwn', text: `*Company:*\n${esc(d.company) || '—'}` },
+        { type: 'mrkdwn', text: `*Role:*\n${esc(d.role) || '—'}` },
+        { type: 'mrkdwn', text: `*Phone:*\n${esc(d.phone) || '—'}` },
+      ],
+    },
+  ];
+  if (d.note) blocks.push({ type: 'section', text: { type: 'mrkdwn', text: `*Note:*\n${esc(d.note)}` } });
+  const context = d.met_at ? `Met at  ${esc(d.met_at)}  ·  LinkedIn  ${linkedin}` : `LinkedIn  ${linkedin}`;
+  blocks.push({ type: 'context', elements: [{ type: 'mrkdwn', text: context }] });
+  return { text, blocks };
 }
 
 // ---- HubSpot --------------------------------------------------------------

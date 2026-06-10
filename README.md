@@ -38,6 +38,11 @@ node test/score.test.mjs   # prove the §6 routing vectors pass
   email-gated PDF (print stylesheet). Refresh-safe via `localStorage`. Disqualifiers
   route to `/not-a-fit`.
 - **Bench** — two audiences on one page; operator application form → HubSpot.
+- **Digital card** (`/card`) — a share-in-person business card: name/role/Altus,
+  one-tap **Save my contact** (client-side vCard `.vcf`), **Book a call** / email /
+  website / LinkedIn actions, a **Share** button (Web Share API → clipboard
+  fallback) and a **QR code** that points back at the card. A reciprocal *Send me
+  your details* form posts to the same capture pipeline (`kind: 'card'`).
 - **not-a-fit · terms · privacy · 404** — templated, on-voice. Privacy covers the
   diagnostic data capture.
 
@@ -70,6 +75,7 @@ browser POSTs to `/api/submit`, which fans out to two **server-side, best-effort
 (each optional, configured by secret):
 
 - **Slack** (`SLACK_WEBHOOK_URL`) — formatted Block Kit notification to a channel.
+  (Optional per-kind overrides: `SLACK_BENCH_WEBHOOK_URL`, `SLACK_CARD_WEBHOOK_URL`.)
 - **HubSpot** (`HUBSPOT_PRIVATE_APP_TOKEN`) — upserts the contact by email and **appends**
   each submission as a JSON entry to the standard `hs_content_membership_notes` property
   (most recent 50 kept). No custom properties, so it works on the current plan.

@@ -1,7 +1,7 @@
 // Verifies the Slack message builders in functions/api/submit.js produce
 // well-formed Slack payloads (valid JSON, required block structure, escaping).
 // Run: node test/submit.test.mjs
-import { recMessage, benchMessage, parseHistory, serializeHistory } from '../functions/api/submit.js';
+import { recMessage, benchMessage, cardMessage, parseHistory, serializeHistory } from '../functions/api/submit.js';
 
 let failed = 0;
 const ok = (name, cond) => {
@@ -41,6 +41,36 @@ const ok = (name, cond) => {
   ok('bench: fallback text has name', m.text.includes('Jane Doe'));
   ok('bench: linkedin link rendered', JSON.stringify(m).includes('linkedin.com/in/jane'));
   ok('bench: specialty present', JSON.stringify(m).includes('RevOps'));
+}
+
+// --- Card (contact swap) message ---
+{
+  const m = cardMessage({
+    email: 'sam@acme.com', full_name: 'Sam Rivera', company: 'Acme', role: 'VP Sales',
+    phone: '816-555-0100', linkedin: 'https://linkedin.com/in/samrivera',
+    note: 'Talked GTM at the KC mixer', met_at: 'KC Founders Mixer',
+  });
+  ok('card: serializes to JSON', typeof JSON.stringify(m) === 'string');
+  ok('card: fallback text has name + company', m.text.includes('Sam Rivera') && m.text.includes('Acme'));
+  ok('card: header block', m.blocks[0].type === 'header');
+  ok('card: email present', JSON.stringify(m).includes('sam@acme.com'));
+  ok('card: note rendered when present', JSON.stringify(m).includes('Talked GTM'));
+  ok('card: met_at in context', JSON.stringify(m).includes('KC Founders Mixer'));
+  ok('card: linkedin link rendered', JSON.stringify(m).includes('linkedin.com/in/samrivera'));
+}
+
+// --- Card with only the required field (graceful dashes, no note block) ---
+{
+  const m = cardMessage({ email: 'lone@solo.io' });
+  ok('card: minimal serializes', typeof JSON.stringify(m) === 'string');
+  ok('card: minimal falls back to email in text', m.text.includes('lone@solo.io'));
+  ok('card: no note section when absent', !JSON.stringify(m).includes('*Note:*'));
+}
+
+// --- Card escaping ---
+{
+  const m = cardMessage({ email: 'x@y.co', full_name: '<img>', note: '<b>hi</b>' });
+  ok('card: escapes angle brackets', JSON.stringify(m).includes('&lt;img&gt;') && JSON.stringify(m).includes('&lt;b&gt;'));
 }
 
 // --- Escaping (no raw angle brackets injected) ---
